@@ -1,3 +1,47 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+/* Los 3 archivos globales */
+@import '../lib/styles/typography.css';
+@import '../lib/styles/colors.css';
+@import '../lib/styles/spacing.css';
+
+/* DaisyUI: tema propio mapeado a nuestros tokens (se ajusta después) */
+@plugin 'daisyui' {
+	themes: false;
+}
+@plugin 'daisyui/theme' {
+	name: 'firewatch';
+	default: true;
+	color-scheme: dark;
+	--color-base-100: var(--color-primary-900);
+	--color-base-200: var(--color-primary-700);
+	--color-base-300: var(--color-primary-400);
+	--color-base-content: var(--color-neutral-50);
+	--color-primary: var(--color-tertiary-200);
+	--color-primary-content: var(--color-neutral-900);
+	--color-secondary: var(--color-secondary-200);
+	--color-secondary-content: var(--color-secondary-900);
+	--color-accent: var(--color-secondary-100);
+	--color-accent-content: var(--color-secondary-900);
+	--color-neutral: var(--color-neutral-700);
+	--color-neutral-content: var(--color-neutral-50);
+	--color-info: var(--color-info-500);
+	--color-info-content: var(--color-blanco);
+	--color-success: var(--color-success-500);
+	--color-success-content: var(--color-neutral-900);
+	--color-warning: var(--color-warning-500);
+	--color-warning-content: var(--color-neutral-900);
+	--color-error: var(--color-error-500);
+	--color-error-content: var(--color-blanco);
+	--radius-box: var(--radius-lg);
+	--radius-field: var(--radius-md);
+	--radius-selector: var(--radius-sm);
+}
+
+@layer base {
+	body {
+		font-family: var(--font-sans);
+	}
+}
