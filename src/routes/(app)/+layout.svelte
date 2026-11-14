@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Menu from '@lucide/svelte/icons/menu';
 	import Sidebar from '#lib/components/layout/Sidebar.svelte';
-	import { currentUser } from '#lib/data/dashboard.ts';
+	import { currentUser } from '#lib/data/common.ts';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();

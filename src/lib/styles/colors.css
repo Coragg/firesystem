@@ -69,6 +69,12 @@
 	--color-heat-4: var(--color-tertiary-300);
 	--color-heat-5: var(--color-tertiary-400);
 
+	/* Escala de potencia radiativa (bg-frp-1 … bg-frp-4, de menor a mayor). Alias. */
+	--color-frp-1: var(--color-warning-500);
+	--color-frp-2: var(--color-tertiary-200);
+	--color-frp-3: var(--color-tertiary-300);
+	--color-frp-4: var(--color-error-500);
+
 	/* Texto legible de cada color (text-success-strong…): para texto sobre fondos claros,
 	   donde el tono base no alcanza contraste 4.5:1. Son alias; el tema oscuro deberá
 	   redefinirlos cuando se pruebe. */

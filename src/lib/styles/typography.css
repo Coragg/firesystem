@@ -126,3 +126,8 @@
 .leaflet-container .leaflet-tooltip {
 	@apply text-caption;
 }
+
+/* Barra de escala del mapa (Leaflet: 11px) → caption */
+.leaflet-container .leaflet-control-container .leaflet-control-scale-line {
+	@apply text-caption;
+}

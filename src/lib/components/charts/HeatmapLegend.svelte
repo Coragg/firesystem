@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { heatLevels } from './ActivityHeatmap.svelte';
+	import { heatLevels } from '#lib/charts/heat.ts';
 </script>
 
 <div class="flex items-center gap-2 text-overline text-base-content/70 uppercase">

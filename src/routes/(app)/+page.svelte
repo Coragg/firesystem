@@ -1,44 +1,35 @@
 <script lang="ts">
-	import Download from '@lucide/svelte/icons/download';
-	import Earth from '@lucide/svelte/icons/earth';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import ActivityHeatmap from '#lib/components/charts/ActivityHeatmap.svelte';
 	import HeatmapLegend from '#lib/components/charts/HeatmapLegend.svelte';
 	import MonthlyActivityChart from '#lib/components/charts/MonthlyActivityChart.svelte';
 	import CriticalPeriods from '#lib/components/dashboard/CriticalPeriods.svelte';
 	import PageHeader from '#lib/components/layout/PageHeader.svelte';
 	import HotspotMap from '#lib/components/map/HotspotMap.svelte';
-	import DateRangeField from '#lib/components/ui/DateRangeField.svelte';
-	import FilterField from '#lib/components/ui/FilterField.svelte';
+	import FilterBar from '#lib/components/ui/FilterBar.svelte';
 	import KpiCard from '#lib/components/ui/KpiCard.svelte';
 	import SelectField from '#lib/components/ui/SelectField.svelte';
 	import Panel from '#lib/components/ui/Panel.svelte';
 	import SensorLegend from '#lib/components/ui/SensorLegend.svelte';
-	import SensorToggle from '#lib/components/ui/SensorToggle.svelte';
 	import StatusBadge from '#lib/components/ui/StatusBadge.svelte';
+	import { dailyActivity, dataYear, monthlyActivity, monthNames } from '#lib/data/activity.ts';
+	import { areas, lastUpdate, region, years } from '#lib/data/common.ts';
 	import {
+		confidenceOptions,
 		criticalPeriods,
-		dailyActivity,
-		dataYear,
-		filterOptions,
 		hotspots,
 		kpis,
-		lastUpdate,
-		monthlyActivity,
-		monthNames,
-		region,
 		watchWindow
 	} from '#lib/data/dashboard.ts';
 	import type { Sensor } from '#lib/sensors.ts';
 
 	// Los filtros aún no cambian los datos (siempre son los de `dataYear`): se conectarán
 	// cuando exista la API.
-	let year = $state(filterOptions.years[0]);
-	let area = $state(filterOptions.areas[0]);
+	let year = $state(years[0]);
+	let area = $state(areas[0]);
 	let from = $state('2024-01-01');
 	let to = $state('2024-12-31');
 	let selectedSensors = $state<Sensor[]>(['MODIS', 'VIIRS']);
-	let confidence = $state(filterOptions.confidence[0]);
+	let confidence = $state(confidenceOptions[0]);
 
 	const countFormat = new Intl.NumberFormat('en-US');
 </script>
@@ -53,50 +44,19 @@
 >
 	{#snippet actions()}
 		<StatusBadge tone="success" dot>Data updated {lastUpdate}</StatusBadge>
-		<SelectField bind:value={year} options={filterOptions.years} label="Year" class="w-auto" />
+		<SelectField bind:value={year} options={years} label="Year" class="w-auto" />
 	{/snippet}
 </PageHeader>
 
-<form
-	class="flex flex-wrap items-end gap-4"
-	aria-label="Filters"
-	onsubmit={(event) => event.preventDefault()}
->
-	<FilterField label="Area of interest" class="min-w-60 flex-1">
-		<SelectField
-			bind:value={area}
-			options={filterOptions.areas}
-			label="Area of interest"
-			icon={Earth}
-			class="w-full"
-		/>
-	</FilterField>
-
-	<FilterField label="Time range" class="min-w-56 flex-1">
-		<DateRangeField bind:from bind:to />
-	</FilterField>
-
-	<FilterField label="Sensors" class="min-w-48 flex-1">
-		<SensorToggle bind:selected={selectedSensors} />
-	</FilterField>
-
-	<FilterField class="min-w-56 flex-1">
-		<SelectField
-			bind:value={confidence}
-			options={filterOptions.confidence}
-			label="Confidence"
-			icon={ShieldCheck}
-			class="w-full"
-		/>
-	</FilterField>
-
-	<FilterField class="min-w-44 flex-1">
-		<button type="button" class="btn w-full text-label-lg btn-info">
-			<Download class="size-4" aria-hidden="true" />
-			Export analysis
-		</button>
-	</FilterField>
-</form>
+<FilterBar
+	bind:area
+	areaOptions={areas}
+	bind:from
+	bind:to
+	bind:sensors={selectedSensors}
+	bind:confidence
+	{confidenceOptions}
+/>
 
 <section
 	class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-6"

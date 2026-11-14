@@ -22,6 +22,17 @@ export type Hotspot = {
 	frp: number;
 };
 
+export type Confidence = 'low' | 'nominal' | 'high';
+
+/** Detección con los datos de su adquisición. */
+export type Detection = Hotspot & {
+	/** Satélite que la registró (por ejemplo "VIIRS NOAA-20"). */
+	satellite: string;
+	confidence: Confidence;
+	/** Momento de adquisición, ISO en UTC. */
+	acquired: string;
+};
+
 /** Detecciones de un día. `date` en formato ISO (`AAAA-MM-DD`). */
 export type DailyActivity = { date: string; count: number };
 

@@ -1,9 +1,5 @@
-<script lang="ts" module>
-	/** Escala de menor a mayor actividad. Los colores son alias definidos en colors.css. */
-	export const heatLevels = ['bg-heat-1', 'bg-heat-2', 'bg-heat-3', 'bg-heat-4', 'bg-heat-5'];
-</script>
-
 <script lang="ts">
+	import { heatScale } from '#lib/charts/heat.ts';
 	import type { DailyActivity } from '#lib/types.ts';
 
 	type Props = {
@@ -11,9 +7,11 @@
 		days: DailyActivity[];
 		/** Descripción para lectores de pantalla. */
 		label: string;
+		/** Etiquetas de mes: todas, o una sí y una no cuando el panel es angosto. */
+		months?: 'all' | 'alternate';
 	};
 
-	let { days, label }: Props = $props();
+	let { days, label, months = 'alternate' }: Props = $props();
 
 	const weekdays = [
 		{ id: 'mon', label: 'M' },
@@ -34,31 +32,24 @@
 	const monthFormat = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' });
 	const countFormat = new Intl.NumberFormat('en-US');
 
-	/** Cortes entre niveles, según la distribución de los propios datos. */
-	let thresholds = $derived.by(() => {
-		const sorted = days.map((day) => day.count).sort((a, b) => a - b);
-		return [0.3, 0.55, 0.8, 0.93].map((q) => sorted[Math.floor(q * (sorted.length - 1))] ?? 0);
-	});
+	let level = $derived(heatScale(days.map((day) => day.count)));
 
 	/** Celdas vacías para que el primer día caiga en su fila (lunes arriba). */
 	let offset = $derived(days.length ? (new Date(days[0].date).getUTCDay() + 6) % 7 : 0);
 	let weeks = $derived(Math.ceil((offset + days.length) / 7));
 
-	/** Etiqueta de mes en la columna donde empieza, un mes sí y uno no, como en el boceto. */
+	/** Etiqueta de mes en la columna donde empieza. */
 	let monthLabels = $derived.by(() => {
 		const labels = Array.from({ length: weeks }, (_, week) => ({ week, text: '' }));
 		days.forEach((day, index) => {
 			const date = new Date(day.date);
-			if (date.getUTCDate() === 1 && date.getUTCMonth() % 2 === 0) {
+			const shown = months === 'all' || date.getUTCMonth() % 2 === 0;
+			if (date.getUTCDate() === 1 && shown) {
 				labels[Math.floor((offset + index) / 7)].text = monthFormat.format(date);
 			}
 		});
 		return labels;
 	});
-
-	function level(count: number): string {
-		return heatLevels[thresholds.filter((threshold) => count > threshold).length];
-	}
 
 	function describe(day: DailyActivity): string {
 		return `${dayFormat.format(new Date(day.date))} · ${countFormat.format(day.count)} detections`;

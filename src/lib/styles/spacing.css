@@ -76,3 +76,15 @@
 	padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
 	border-radius: var(--radius-sm);
 }
+
+/* Barra de escala: relleno de 0,5 × 1,5 unidades y separación de 3 unidades al borde
+   (Leaflet usa 2 × 5 px y 5–10 px). */
+.leaflet-container .leaflet-control-container .leaflet-control-scale-line {
+	padding: calc(var(--spacing) * 0.5) calc(var(--spacing) * 1.5);
+}
+.leaflet-container .leaflet-bottom .leaflet-control-scale {
+	margin-bottom: calc(var(--spacing) * 3);
+}
+.leaflet-container .leaflet-left .leaflet-control-scale {
+	margin-left: calc(var(--spacing) * 3);
+}
