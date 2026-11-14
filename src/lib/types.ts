@@ -1,0 +1,37 @@
+/** Tipos de dominio compartidos por componentes y datos. */
+import type { Sensor } from '#lib/sensors.ts';
+
+export type KpiTone = 'primary' | 'secondary' | 'warning' | 'error' | 'success' | 'neutral';
+
+export type Kpi = {
+	label: string;
+	value: string;
+	/** Dato destacado junto al valor (variación, conteo, estado). */
+	highlight?: string;
+	tone?: KpiTone;
+	trend?: 'up' | 'down';
+	note?: string;
+};
+
+export type Hotspot = {
+	id: number;
+	lat: number;
+	lng: number;
+	sensor: Sensor;
+	/** Fire radiative power, en MW. */
+	frp: number;
+};
+
+/** Detecciones de un día. `date` en formato ISO (`AAAA-MM-DD`). */
+export type DailyActivity = { date: string; count: number };
+
+export type SensorSeries = { sensor: Sensor; values: number[] };
+
+export type Severity = 'critical' | 'elevated';
+
+export type CriticalPeriod = {
+	id: string;
+	range: string;
+	severity: Severity;
+	detail: string;
+};

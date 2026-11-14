@@ -17,7 +17,14 @@
 	--container-content: 72rem;
 	--container-page: 90rem;
 
+	/* Shell de la app (w-sidebar, max-w-app). Referencia: boceto 1440 → objetivo 1920.
+	   El menú crece hasta 1920 y se detiene; el contenido se limita a max-w-app y el
+	   espacio sobrante en pantallas mayores lo absorbe el padding lateral. */
+	--container-sidebar: clamp(14rem, 15.5vw, 18.75rem);
+	--container-app: 96rem;
+
 	/* Radios */
+	--radius-xs: 0.125rem;
 	--radius-sm: 0.375rem;
 	--radius-md: 0.5rem;
 	--radius-lg: 0.75rem;
@@ -27,4 +34,45 @@
 	/* Espaciado fluido para secciones y gutters (p-gutter, py-section) */
 	--spacing-gutter: clamp(1rem, 2.5vw, 2.5rem);
 	--spacing-section: clamp(2rem, 5vw, 6rem);
+
+	/* Unidad de tamaño de los campos de daisyUI (botón, select, input = 10 unidades).
+	   40px de alto hasta 1540px y 50px desde 1920: boceto 38px a 1440, con texto label-lg. */
+	--spacing-field-unit: clamp(0.25rem, 0.26vw, 0.3125rem);
+}
+
+/*
+ * Medidas de librerías externas, homologadas a la escala de spacing.
+ * Van sin @layer y con selectores más específicos porque leaflet.css tampoco usa capas.
+ */
+
+/* Botones del zoom: caja de 8 unidades (32 px; Leaflet usa 30). El interlineado igual a la
+   caja centra el signo. Bordes redondeados con el radio de campos del tema. */
+.leaflet-container .leaflet-control-container .leaflet-bar {
+	border-radius: var(--radius-field);
+	overflow: hidden;
+}
+.leaflet-container .leaflet-control-container .leaflet-bar a {
+	width: calc(var(--spacing) * 8);
+	height: calc(var(--spacing) * 8);
+	line-height: calc(var(--spacing) * 8);
+	border-radius: 0;
+}
+
+/* Separación de los controles respecto del borde del mapa: 3 unidades (12 px; Leaflet usa 10). */
+.leaflet-container .leaflet-top .leaflet-control {
+	margin-top: calc(var(--spacing) * 3);
+}
+.leaflet-container .leaflet-left .leaflet-control {
+	margin-left: calc(var(--spacing) * 3);
+}
+
+/* Atribución: relleno horizontal de 1,5 unidades (6 px; Leaflet usa 5). */
+.leaflet-container .leaflet-control-container .leaflet-control-attribution {
+	padding: 0 calc(var(--spacing) * 1.5);
+}
+
+/* Tooltip de cada detección: relleno de 1,5 × 2 unidades y radio pequeño (Leaflet: 6 px y 3 px). */
+.leaflet-container .leaflet-tooltip {
+	padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
+	border-radius: var(--radius-sm);
 }

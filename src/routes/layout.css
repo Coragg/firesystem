@@ -7,17 +7,59 @@
 @import '../lib/styles/colors.css';
 @import '../lib/styles/spacing.css';
 
-/* DaisyUI: tema propio mapeado a nuestros tokens (se ajusta después) */
+/*
+ * DaisyUI: temas propios mapeados a nuestros tokens.
+ * Roles de superficie (iguales en ambos temas):
+ *   base-100 = superficie (paneles, tarjetas, campos)
+ *   base-200 = fondo de página
+ *   base-300 = menú lateral
+ * Bordes y estados elevados se hacen con base-content a baja opacidad.
+ */
 @plugin 'daisyui' {
 	themes: false;
 }
 @plugin 'daisyui/theme' {
-	name: 'firewatch';
+	name: 'firewatch-light';
 	default: true;
+	prefersdark: false;
+	color-scheme: light;
+	--color-base-100: var(--color-blanco);
+	--color-base-200: var(--color-neutral-50);
+	--color-base-300: var(--color-neutral-100);
+	--color-base-content: var(--color-primary-500);
+	--color-primary: var(--color-tertiary-200);
+	--color-primary-content: var(--color-neutral-900);
+	--color-secondary: var(--color-secondary-400);
+	--color-secondary-content: var(--color-blanco);
+	--color-accent: var(--color-secondary-200);
+	--color-accent-content: var(--color-secondary-900);
+	--color-neutral: var(--color-primary-500);
+	--color-neutral-content: var(--color-neutral-50);
+	--color-info: var(--color-info-500);
+	--color-info-content: var(--color-blanco);
+	--color-success: var(--color-success-500);
+	--color-success-content: var(--color-neutral-900);
+	--color-warning: var(--color-warning-500);
+	--color-warning-content: var(--color-neutral-900);
+	--color-error: var(--color-error-500);
+	--color-error-content: var(--color-blanco);
+	--radius-box: var(--radius-xl);
+	--radius-field: var(--radius-md);
+	--radius-selector: var(--radius-sm);
+	--size-selector: 0.25rem;
+	--size-field: var(--spacing-field-unit);
+	--border: 1px;
+	--depth: 0;
+	--noise: 0;
+}
+@plugin 'daisyui/theme' {
+	name: 'firewatch';
+	default: false;
+	prefersdark: false;
 	color-scheme: dark;
-	--color-base-100: var(--color-primary-900);
-	--color-base-200: var(--color-primary-700);
-	--color-base-300: var(--color-primary-400);
+	--color-base-100: var(--color-primary-700);
+	--color-base-200: var(--color-primary-900);
+	--color-base-300: var(--color-primary-700);
 	--color-base-content: var(--color-neutral-50);
 	--color-primary: var(--color-tertiary-200);
 	--color-primary-content: var(--color-neutral-900);
@@ -35,9 +77,20 @@
 	--color-warning-content: var(--color-neutral-900);
 	--color-error: var(--color-error-500);
 	--color-error-content: var(--color-blanco);
-	--radius-box: var(--radius-lg);
+	--radius-box: var(--radius-xl);
 	--radius-field: var(--radius-md);
 	--radius-selector: var(--radius-sm);
+	--size-selector: 0.25rem;
+	--size-field: var(--spacing-field-unit);
+	--border: 1px;
+	--depth: 0;
+	--noise: 0;
+}
+
+/* Ítem activo del menú: fondo de superficie (base-100) sobre el gris del menú. */
+@utility menu {
+	--menu-active-bg: var(--color-base-100);
+	--menu-active-fg: var(--color-base-content);
 }
 
 @layer base {

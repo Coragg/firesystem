@@ -1,7 +1,18 @@
 /*
- * typography.css — Roboto y categorías tipográficas (fluidas con clamp()).
- * Uso: text-display, text-h1..h4, text-body-lg, text-body, text-body-sm,
- *      text-caption, text-label, text-overline + font-regular/medium/semibold/bold, italic.
+ * typography.css — Roboto y categorías tipográficas de la app.
+ *
+ * Tamaños fijos en rem (respetan el zoom del navegador) e interlineados múltiplos de 4 px,
+ * alineados con la unidad de spacing.css. Cada categoría ya trae su peso: en los componentes
+ * no se agregan pesos sueltos, salvo los modificadores permitidos (ver al final).
+ *
+ * Pesos: solo los 4 estándar.
+ *   400 regular  → lectura (body, caption)
+ *   500 medium   → controles y etiquetas interactivas (label)
+ *   600 semibold → títulos y etiquetas en mayúsculas
+ *   700 bold     → solo cifras destacadas y título de página
+ *
+ * Uso: text-display, text-title-lg/md/sm/xs, text-body-lg, text-body, text-label-lg,
+ *      text-label, text-overline-lg, text-overline, text-caption.
  */
 @import '@fontsource-variable/roboto/wght.css';
 @import '@fontsource-variable/roboto/wght-italic.css';
@@ -15,46 +26,103 @@
 	--font-weight-semibold: 600;
 	--font-weight-bold: 700;
 
-	--text-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
-	--text-display--line-height: 1.05;
-	--text-display--letter-spacing: -0.02em;
+	/* Display (título de página y cifras de los KPI) — 34 / 40 · 700.
+	   Boceto: 26px y 25px a 1440 → ~34px a 1920. */
+	--text-display: 2.125rem;
+	--text-display--line-height: 2.5rem;
 	--text-display--font-weight: 700;
+	--text-display--letter-spacing: -0.01em;
 
-	--text-h1: clamp(2rem, 1.5rem + 2vw, 3rem);
-	--text-h1--line-height: 1.15;
-	--text-h1--letter-spacing: -0.015em;
-	--text-h1--font-weight: 700;
+	/* Título principal (título de página) — 24 / 32 · 700 */
+	--text-title-lg: 1.5rem;
+	--text-title-lg--line-height: 2rem;
+	--text-title-lg--font-weight: 700;
 
-	--text-h2: clamp(1.5rem, 1.25rem + 1vw, 2.25rem);
-	--text-h2--line-height: 1.2;
-	--text-h2--font-weight: 700;
+	/* Título secundario 20 — 20 / 28 · 600 */
+	--text-title-md: 1.25rem;
+	--text-title-md--line-height: 1.75rem;
+	--text-title-md--font-weight: 600;
 
-	--text-h3: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
-	--text-h3--line-height: 1.3;
-	--text-h3--font-weight: 600;
+	/* Título secundario 18 (marca, títulos de panel) — 18 / 24 · 600 */
+	--text-title-sm: 1.125rem;
+	--text-title-sm--line-height: 1.5rem;
+	--text-title-sm--font-weight: 600;
 
-	--text-h4: clamp(1.125rem, 1.05rem + 0.3vw, 1.375rem);
-	--text-h4--line-height: 1.35;
-	--text-h4--font-weight: 600;
+	/* Título secundario 16 (títulos de fila o lista) — 16 / 24 · 600 */
+	--text-title-xs: 1rem;
+	--text-title-xs--line-height: 1.5rem;
+	--text-title-xs--font-weight: 600;
 
-	--text-body-lg: clamp(1.0625rem, 1rem + 0.25vw, 1.25rem);
-	--text-body-lg--line-height: 1.6;
+	/* Descripción 16 (ítems del menú, nombre de usuario) — 16 / 24 · 400 */
+	--text-body-lg: 1rem;
+	--text-body-lg--line-height: 1.5rem;
+	--text-body-lg--font-weight: 400;
 
-	--text-body: 1rem;
-	--text-body--line-height: 1.5;
+	/* Descripción y párrafo 14 (notas, subtítulos de panel) — 14 / 20 · 400.
+	   Se distinguen por color, no por tipografía. */
+	--text-body: 0.875rem;
+	--text-body--line-height: 1.25rem;
+	--text-body--font-weight: 400;
 
-	--text-body-sm: 0.875rem;
-	--text-body-sm--line-height: 1.45;
+	/* Label 16 (selects, rango de fechas, botones principales) — 16 / 24 · 500.
+	   Boceto: 12px a 1440 → 16px a 1920. */
+	--text-label-lg: 1rem;
+	--text-label-lg--line-height: 1.5rem;
+	--text-label-lg--font-weight: 500;
 
-	--text-caption: 0.75rem;
-	--text-caption--line-height: 1.4;
-
+	/* Label 14 (opciones dentro de controles, enlaces de acción) — 14 / 20 · 500 */
 	--text-label: 0.875rem;
-	--text-label--line-height: 1.25;
+	--text-label--line-height: 1.25rem;
 	--text-label--font-weight: 500;
 
-	--text-overline: 0.6875rem;
-	--text-overline--line-height: 1.2;
-	--text-overline--letter-spacing: 0.08em;
+	/* Etiqueta en mayúsculas grande (badges y píldoras) — 14 / 20 · 600.
+	   Boceto: 11px a 1440 → ~14px a 1920. Se usa junto con la clase `uppercase`. */
+	--text-overline-lg: 0.875rem;
+	--text-overline-lg--line-height: 1.25rem;
+	--text-overline-lg--font-weight: 600;
+	--text-overline-lg--letter-spacing: 0.06em;
+
+	/* Etiqueta en mayúsculas (WORKSPACE, AREA OF INTEREST, etiquetas de KPI) — 12 / 16 · 600.
+	   Se usa junto con la clase `uppercase`. */
+	--text-overline: 0.75rem;
+	--text-overline--line-height: 1rem;
 	--text-overline--font-weight: 600;
+	--text-overline--letter-spacing: 0.06em;
+
+	/* Pie (notas, leyendas, ejes, datos secundarios) — 12 / 16 · 400 */
+	--text-caption: 0.75rem;
+	--text-caption--line-height: 1rem;
+	--text-caption--font-weight: 400;
+}
+
+/*
+ * Modificadores permitidos sobre una categoría:
+ *   font-semibold → estado activo o énfasis puntual (ítem de menú activo, dato destacado)
+ *   italic        → estilo, no peso (por ejemplo, el pie "Pacific region")
+ *   uppercase     → obligatorio con text-overline y text-overline-lg
+ *   tabular-nums  → cifras que deben alinearse
+ */
+
+/*
+ * Textos que generan librerías externas, homologados a la categoría más parecida.
+ * Van sin @layer y con selectores más específicos porque leaflet.css tampoco usa capas.
+ * (Los textos de ECharts se dibujan en canvas: toman el token desde JS, ver EChart.svelte.)
+ */
+
+/* Botones + y − del zoom (Leaflet: 22px bold monospace) → title-md.
+   El interlineado lo fija spacing.css igual al alto de la caja, para centrar el signo. */
+.leaflet-container .leaflet-control-zoom a {
+	font-family: var(--font-sans);
+	font-size: var(--text-title-md);
+	font-weight: var(--text-title-md--font-weight);
+}
+
+/* Atribución del mapa (Leaflet: 12px, interlineado 1.4) → caption */
+.leaflet-container .leaflet-control-container .leaflet-control-attribution {
+	@apply text-caption;
+}
+
+/* Tooltip de cada detección (Leaflet: 12px, interlineado 1.5) → caption */
+.leaflet-container .leaflet-tooltip {
+	@apply text-caption;
 }

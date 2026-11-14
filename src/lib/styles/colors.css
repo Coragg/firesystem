@@ -60,4 +60,21 @@
 	--color-info-100: #cfe4ff;
 	--color-info-500: #3b82f6;
 	--color-info-900: #12306b;
+
+	/* Escala del mapa de calor (bg-heat-1 … bg-heat-5, de menor a mayor actividad).
+	   Son alias: si cambia la paleta, se reapuntan aquí y los componentes no se tocan. */
+	--color-heat-1: var(--color-neutral-100);
+	--color-heat-2: var(--color-tertiary-100);
+	--color-heat-3: var(--color-tertiary-200);
+	--color-heat-4: var(--color-tertiary-300);
+	--color-heat-5: var(--color-tertiary-400);
+
+	/* Texto legible de cada color (text-success-strong…): para texto sobre fondos claros,
+	   donde el tono base no alcanza contraste 4.5:1. Son alias; el tema oscuro deberá
+	   redefinirlos cuando se pruebe. */
+	--color-success-strong: var(--color-success-900);
+	--color-warning-strong: var(--color-warning-900);
+	--color-error-strong: var(--color-error-900);
+	--color-info-strong: var(--color-info-900);
+	--color-secondary-strong: var(--color-secondary-500);
 }
