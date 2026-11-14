@@ -97,4 +97,5 @@ Use Conventional Commits in English:
 ## Agent Rules
 
 - Preserve unrelated user changes; inspect the working tree before editing.
+- Follow `.agents/rules/plan_structure.md` and `.agents/rules/git.md` for plans and Git work. Keep their matching `.claude/rules/` copies aligned.
 - Keep this file aligned with the repository's actual structure, scripts, and workflow as they evolve.
