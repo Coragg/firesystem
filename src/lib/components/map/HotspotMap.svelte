@@ -10,10 +10,11 @@
 
 <script lang="ts">
 	import 'leaflet/dist/leaflet.css';
+	import House from '@lucide/svelte/icons/house';
 	import LocateFixed from '@lucide/svelte/icons/locate-fixed';
 	import Minus from '@lucide/svelte/icons/minus';
 	import Plus from '@lucide/svelte/icons/plus';
-	import type { Map as LeafletMap } from 'leaflet';
+	import type { ErrorEvent, LayerGroup, Map as LeafletMap, LocationEvent } from 'leaflet';
 	import { untrack, type Snippet } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import type { ClassValue } from 'svelte/elements';
@@ -21,6 +22,7 @@
 	import { basemap } from '#lib/map/basemap.ts';
 	import { sensors } from '#lib/sensors.ts';
 	import { cssVar, spacingUnit } from '#lib/theme.ts';
+	import { notify } from '#lib/toast.svelte.ts';
 	import type { Hotspot } from '#lib/types.ts';
 
 	type Leaflet = typeof import('leaflet');
@@ -33,7 +35,7 @@
 		label: string;
 		colorMode?: MapColorMode;
 		/**
-		 * Variante completa: controles propios (zoom y recentrar) a la derecha y barra de
+		 * Variante completa: controles propios (zoom, vista inicial y "mi ubicación") a la derecha y barra de
 		 * escala. Sin esto, el mapa usa el zoom por defecto de Leaflet (variante compacta).
 		 */
 		controls?: boolean;
@@ -62,6 +64,9 @@
 	let leaflet = $state.raw<Leaflet>();
 	let map = $state.raw<LeafletMap>();
 	let container: HTMLElement | undefined;
+	/** Marcador y círculo de precisión de la ubicación del usuario. */
+	let userLayer: LayerGroup | undefined;
+	let locating = $state(false);
 
 	/** Detección intensa: a partir del segundo nivel de potencia lleva halo. */
 	function isIntense(point: Hotspot): boolean {
@@ -109,6 +114,66 @@
 			map = undefined;
 		};
 	};
+
+	// Si cambia el área (centro o zoom), el mapa vuela hasta ella.
+	$effect(() => {
+		const view = { center, zoom };
+		untrack(() => map)?.flyTo(view.center, view.zoom, { duration: 0.8 });
+	});
+
+	/** Centra el mapa en la ubicación del navegador (pide permiso la primera vez). */
+	function locate() {
+		if (!map || !leaflet || !container) return;
+		if (!('geolocation' in navigator)) {
+			notify('Your browser does not share its location.', 'warning');
+			return;
+		}
+		const L = leaflet;
+		const node = container;
+		const instance = map;
+		locating = true;
+
+		function done() {
+			locating = false;
+			instance.off('locationfound', found);
+			instance.off('locationerror', failed);
+		}
+		function found(event: LocationEvent) {
+			done();
+			const unit = spacingUnit(node);
+			const color = cssVar(node, '--color-info');
+			userLayer?.remove();
+			userLayer = L.layerGroup([
+				L.circle(event.latlng, {
+					radius: event.accuracy,
+					color,
+					weight: 1,
+					fillOpacity: 0.1,
+					interactive: false
+				}),
+				L.circleMarker(event.latlng, {
+					radius: unit * 2,
+					color: cssVar(node, '--color-base-100'),
+					weight: unit / 2,
+					fillColor: color,
+					fillOpacity: 1
+				}).bindTooltip('You are here')
+			]).addTo(instance);
+		}
+		function failed(event: ErrorEvent) {
+			done();
+			// Código 1 de la API de geolocalización: el usuario negó el permiso.
+			notify(
+				event.code === 1
+					? 'Location access was denied. Allow it in your browser to center the map on you.'
+					: 'We could not get your location. Try again in a moment.',
+				'warning'
+			);
+		}
+		instance.on('locationfound', found);
+		instance.on('locationerror', failed);
+		instance.locate({ setView: true, maxZoom: 11, timeout: 10000 });
+	}
 
 	// Sincroniza los puntos con Leaflet cada vez que cambian los datos, el modo o la selección.
 	$effect(() => {
@@ -175,7 +240,8 @@
 	></div>
 
 	{#if controls}
-		<div class="join join-vertical absolute end-3 top-16 shadow-sm">
+		<!-- Con elementos flotantes arriba (capas, contador), los controles bajan para no taparlos. -->
+		<div class={['join join-vertical absolute end-3 shadow-sm', overlay ? 'top-16' : 'top-3']}>
 			<button
 				type="button"
 				class="btn btn-square join-item bg-base-100"
@@ -195,10 +261,25 @@
 			<button
 				type="button"
 				class="btn btn-square join-item bg-base-100"
-				aria-label="Recenter map"
+				aria-label="Back to area view"
+				title="Back to area view"
 				onclick={() => map?.setView(center, zoom)}
 			>
-				<LocateFixed class="size-4" aria-hidden="true" />
+				<House class="size-4" aria-hidden="true" />
+			</button>
+			<button
+				type="button"
+				class="btn btn-square join-item bg-base-100"
+				aria-label="Center on my location"
+				title="Center on my location"
+				disabled={locating}
+				onclick={locate}
+			>
+				{#if locating}
+					<span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+				{:else}
+					<LocateFixed class="size-4" aria-hidden="true" />
+				{/if}
 			</button>
 		</div>
 	{/if}

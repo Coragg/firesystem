@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Menu from '@lucide/svelte/icons/menu';
+	import BrandMark from '#lib/components/layout/BrandMark.svelte';
 	import Sidebar from '#lib/components/layout/Sidebar.svelte';
+	import Toaster from '#lib/components/ui/Toaster.svelte';
 	import { currentUser } from '#lib/data/common.ts';
 	import type { LayoutProps } from './$types';
 
@@ -15,7 +17,10 @@
 			<label for="app-drawer" class="btn btn-square btn-ghost" aria-label="Open menu">
 				<Menu class="size-5" aria-hidden="true" />
 			</label>
-			<span class="px-2 text-title-sm uppercase">Firewatch</span>
+			<span class="flex items-center gap-2 px-2">
+				<BrandMark class="size-7" />
+				<span class="text-title-sm uppercase">Firewatch</span>
+			</span>
 		</div>
 
 		<main class="w-full flex-1 px-gutter py-6 2xl:py-10">
@@ -30,3 +35,5 @@
 		<Sidebar user={currentUser} />
 	</div>
 </div>
+
+<Toaster />

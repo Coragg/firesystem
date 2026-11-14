@@ -28,6 +28,10 @@
 				</div>
 				<StatusBadge tone={level.tone}>{level.label}</StatusBadge>
 			</li>
+		{:else}
+			<li class="list-row px-0 text-body text-base-content/70">
+				No unusual weeks in this period.
+			</li>
 		{/each}
 	</ul>
 

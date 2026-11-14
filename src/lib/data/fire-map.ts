@@ -2,7 +2,7 @@
  * Datos de ejemplo de la pantalla Fire map (febrero de 2024), tomados del boceto de Penpot.
  * Son provisionales: se reemplazan por la API cuando exista, manteniendo los mismos tipos.
  */
-import type { Confidence, Detection } from '#lib/types.ts';
+import type { Detection } from '#lib/types.ts';
 import { clusters, seeded } from './common.ts';
 
 export const mapPeriod = { from: '2024-02-01', to: '2024-02-29', days: 29 };
@@ -10,12 +10,7 @@ export const mapPeriod = { from: '2024-02-01', to: '2024-02-29', days: 29 };
 /** Día seleccionado al abrir la pantalla (índice desde 0): 14 de febrero. */
 export const defaultDayIndex = 13;
 
-/** Opciones del filtro de confianza y los niveles que acepta cada una. */
-export const confidenceFilters: Record<string, Confidence[]> = {
-	'Nominal & high': ['nominal', 'high'],
-	'High only': ['high'],
-	'All levels': ['low', 'nominal', 'high']
-};
+export { confidenceFilters } from './common.ts';
 
 /** Capas del mapa y el modo de color que activa cada una. */
 export const mapLayers = {

@@ -57,7 +57,16 @@
 </script>
 
 <div class="my-auto overflow-x-auto">
-	<div class="flex min-w-140 flex-col gap-2" role="img" aria-label={label}>
+	<!--
+		Rangos largos: ancho mínimo y scroll horizontal. Rangos cortos: las celdas no crecen
+		más de 6 unidades (24 px) para que unas pocas semanas no llenen el panel.
+	-->
+	<div
+		class={['flex flex-col gap-2', weeks >= 20 && 'min-w-140']}
+		style:max-width="calc(var(--spacing) * 7 * {weeks + 1})"
+		role="img"
+		aria-label={label}
+	>
 		<div class="grid auto-cols-fr grid-flow-col grid-rows-7 gap-1">
 			{#each weekdays as weekday (weekday.id)}
 				<span class="grid place-items-center text-overline text-base-content/70">

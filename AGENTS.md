@@ -30,6 +30,9 @@ FireSystem is the SvelteKit frontend for the FireSystem application. It is built
 │   │   ├── frp.ts           # Fire radiative power levels and their theme colors
 │   │   ├── activity.ts      # Summaries of a daily activity series
 │   │   ├── theme.ts         # Reads theme tokens for ECharts and Leaflet
+│   │   ├── toast.svelte.ts  # App-wide toast notifications (shown by ui/Toaster)
+│   │   ├── dropdown.ts      # Closes <details> dropdowns on outside click / Escape
+│   │   ├── export.ts        # Client-side CSV and GeoJSON downloads
 │   │   └── types.ts         # Shared domain types
 │   └── routes/              # SvelteKit file-based routes and layouts
 │       ├── layout.css       # Tailwind entry point and daisyUI themes

@@ -1,3 +1,5 @@
+import type { Confidence } from '#lib/types.ts';
+
 /**
  * Datos de ejemplo compartidos por varias pantallas. Son provisionales: se reemplazan
  * por la API cuando exista, manteniendo los mismos tipos.
@@ -37,3 +39,50 @@ export const clusters = [
 	{ lat: -37.35, lng: -71.7, spread: 0.5, weight: 0.15 },
 	{ lat: -36.85, lng: -73.0, spread: 0.25, weight: 0.15 }
 ];
+
+/** Opciones del filtro de confianza y los niveles que acepta cada una. */
+export const confidenceFilters: Record<string, Confidence[]> = {
+	'Nominal & high': ['nominal', 'high'],
+	'High only': ['high'],
+	'All levels': ['low', 'nominal', 'high']
+};
+
+export type Cluster = (typeof clusters)[number];
+
+/** Región de un área de interés: vista del mapa, actividad relativa y cúmulos de focos. */
+export type Region = {
+	name: string;
+	shortName: string;
+	center: [number, number];
+	zoom: number;
+	/** Actividad relativa a Biobío (1 = igual). */
+	activity: number;
+	clusters: Cluster[];
+};
+
+/** Mueve los cúmulos de Biobío al centro de otra región (coordenadas aproximadas). */
+function shiftClusters(center: [number, number]): Cluster[] {
+	const [dLat, dLng] = [center[0] - region.center[0], center[1] - region.center[1]];
+	return clusters.map((cluster) => ({ ...cluster, lat: cluster.lat + dLat, lng: cluster.lng + dLng }));
+}
+
+/** Regiones por cada opción de `areas`. Centros aproximados. */
+export const regions: Record<string, Region> = {
+	[areas[0]]: { ...region, activity: 1, clusters },
+	[areas[1]]: {
+		name: 'Araucanía Region · Chile',
+		shortName: 'Araucanía, Chile',
+		center: [-38.75, -72.45],
+		zoom: 8,
+		activity: 0.8,
+		clusters: shiftClusters([-38.75, -72.45])
+	},
+	[areas[2]]: {
+		name: 'Maule Region · Chile',
+		shortName: 'Maule, Chile',
+		center: [-35.55, -71.6],
+		zoom: 8,
+		activity: 0.65,
+		clusters: shiftClusters([-35.55, -71.6])
+	}
+};

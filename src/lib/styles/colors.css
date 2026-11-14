@@ -83,4 +83,9 @@
 	--color-error-strong: var(--color-error-900);
 	--color-info-strong: var(--color-info-900);
 	--color-secondary-strong: var(--color-secondary-500);
+
+	/* Borde de los campos de filtro (selects, inputs, dropdowns, chips): mismo tono que los
+	   divisores de paneles, un poco más marcado; más visible al pasar el cursor. Alias. */
+	--color-field-border: color-mix(in oklab, var(--color-base-content) 12%, transparent);
+	--color-field-border-hover: color-mix(in oklab, var(--color-base-content) 25%, transparent);
 }
