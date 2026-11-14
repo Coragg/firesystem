@@ -48,27 +48,37 @@
 		};
 	}
 
+	let instance = $state.raw<EChartsType>();
+	let host: HTMLElement | undefined;
+
+	// El gráfico se crea una sola vez; las opciones se aplican aparte (ver el efecto de abajo).
 	const chart: Attachment<HTMLElement> = (node) => {
-		// Leer `options` aquí hace que el gráfico se vuelva a crear si cambian los datos.
-		const build = options;
-		let instance: EChartsType | undefined;
 		let cancelled = false;
-		const observer = new ResizeObserver(() => instance?.resize());
+		let created: EChartsType | undefined;
+		const observer = new ResizeObserver(() => created?.resize());
 
 		// ECharts necesita el navegador: se carga solo en cliente.
 		import('#lib/charts/echarts.ts').then(({ echarts }) => {
 			if (cancelled) return;
-			instance = echarts.init(node);
-			instance.setOption(build(readTokens(node)));
+			created = echarts.init(node);
+			host = node;
+			instance = created;
 			observer.observe(node);
 		});
 
 		return () => {
 			cancelled = true;
 			observer.disconnect();
-			instance?.dispose();
+			created?.dispose();
+			instance = undefined;
 		};
 	};
+
+	// Se vuelve a aplicar cada vez que cambian los datos que lee `options` (series, meses...).
+	$effect(() => {
+		if (!instance || !host) return;
+		instance.setOption(options(readTokens(host)), { notMerge: true });
+	});
 </script>
 
 <div {@attach chart} class={['w-full', className]} role="img" aria-label={label}></div>
