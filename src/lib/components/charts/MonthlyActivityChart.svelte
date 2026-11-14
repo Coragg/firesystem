@@ -8,16 +8,19 @@
 		/** Nombres completos de los meses, en orden. */
 		months: string[];
 		series: SensorSeries[];
+		/** Etiquetas del eje: inicial ("J") en paneles angostos o abreviatura ("Jan"). */
+		monthLabels?: 'initial' | 'short';
 		class?: ClassValue;
 	};
 
-	let { months, series, class: className }: Props = $props();
+	let { months, series, monthLabels = 'initial', class: className }: Props = $props();
 
 	function compact(value: number): string {
 		return value >= 1000 ? `${value / 1000}k` : String(value);
 	}
 
 	function options(tokens: ChartTokens) {
+		const labelLength = monthLabels === 'short' ? 3 : 1;
 		const axisLabel = {
 			color: tokens.muted,
 			fontSize: tokens.fontSize,
@@ -46,7 +49,7 @@
 				data: months,
 				axisTick: { show: false },
 				axisLine: { show: false },
-				axisLabel: { ...axisLabel, interval: 0, formatter: (month: string) => month.charAt(0) }
+				axisLabel: { ...axisLabel, interval: 0, formatter: (month: string) => month.slice(0, labelLength) }
 			},
 			yAxis: {
 				type: 'value',

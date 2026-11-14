@@ -13,6 +13,8 @@ export type SensorInfo = {
 	statusClass: string;
 	/** Borde y relleno del chip de filtro cuando el sensor está activo. */
 	chipClass: string;
+	/** Recuadro relleno con el color del sensor (ícono de la fuente). */
+	tileClass: string;
 };
 
 export const sensors: Record<Sensor, SensorInfo> = {
@@ -22,7 +24,8 @@ export const sensors: Record<Sensor, SensorInfo> = {
 		longLabel: 'MODIS Terra/Aqua',
 		colorVar: '--color-primary',
 		statusClass: 'status-primary',
-		chipClass: 'has-checked:border-primary has-checked:bg-primary/15'
+		chipClass: 'has-checked:border-primary has-checked:bg-primary/15',
+		tileClass: 'bg-primary text-primary-content'
 	},
 	VIIRS: {
 		id: 'VIIRS',
@@ -30,7 +33,8 @@ export const sensors: Record<Sensor, SensorInfo> = {
 		longLabel: 'VIIRS SNPP/NOAA-20',
 		colorVar: '--color-secondary',
 		statusClass: 'status-secondary',
-		chipClass: 'has-checked:border-secondary has-checked:bg-secondary/15'
+		chipClass: 'has-checked:border-secondary has-checked:bg-secondary/15',
+		tileClass: 'bg-secondary text-secondary-content'
 	}
 };
 

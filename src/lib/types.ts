@@ -46,3 +46,34 @@ export type CriticalPeriod = {
 	severity: Severity;
 	detail: string;
 };
+
+/** Fuente de datos: un sensor o la capa armonizada (sin `sensor`). */
+export type DataSource = {
+	id: string;
+	name: string;
+	origin: string;
+	sensor?: Sensor;
+	status: string;
+	detections: number;
+	resolution: string;
+};
+
+/** Producto que alimenta la plataforma. `since` es el primer año con datos. */
+export type Feed = {
+	id: string;
+	name: string;
+	product?: string;
+	since: number;
+	resolution: string;
+	status: string;
+};
+
+export type CoverageMetric = {
+	id: string;
+	label: string;
+	/** Proporción de 0 a 1. */
+	share: number;
+	tone: 'primary' | 'secondary' | 'success';
+};
+
+export type PipelineStep = { id: string; title: string; detail: string };

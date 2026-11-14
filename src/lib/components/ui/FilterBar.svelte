@@ -1,12 +1,14 @@
 <script lang="ts" module>
-	export type FilterName = 'year' | 'area' | 'dates' | 'sensors' | 'confidence';
+	export type FilterName = 'period' | 'year' | 'area' | 'dates' | 'sensors' | 'confidence';
 
 	/** Opción del menú de exportar: qué se descarga y la acción que lo genera. */
 	export type ExportOption = { label: string; detail?: string; run: () => void };
 </script>
 
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
+	import CalendarRange from '@lucide/svelte/icons/calendar-range';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Download from '@lucide/svelte/icons/download';
 	import Earth from '@lucide/svelte/icons/earth';
@@ -22,10 +24,17 @@
 	type Props = {
 		/** Filtros que muestra esta pantalla. El orden en pantalla es siempre el mismo. */
 		fields?: FilterName[];
+		/** Periodo elegido de una lista (por ejemplo "2020 — 2024" o "Jan — Dec 2024"). */
+		period?: string;
+		periodOptions?: readonly string[];
+		/** Etiqueta del filtro de periodo. */
+		periodLabel?: string;
 		year?: number;
 		yearOptions?: readonly number[];
 		area?: string;
 		areaOptions?: readonly string[];
+		/** Etiqueta del filtro de área. */
+		areaLabel?: string;
 		/** Fechas en formato ISO (`AAAA-MM-DD`). */
 		from?: string;
 		to?: string;
@@ -46,14 +55,20 @@
 		exportOptions?: ExportOption[];
 		/** Si se pasa, aparece el botón "Reset". */
 		onreset?: () => void;
+		/** Botón que reemplaza al de exportar en pantallas que no exportan. */
+		action?: Snippet;
 	};
 
 	let {
 		fields = ['area', 'dates', 'sensors', 'confidence'],
+		period = $bindable(''),
+		periodOptions = [],
+		periodLabel = 'Reporting period',
 		year = $bindable(0),
 		yearOptions = [],
 		area = $bindable(''),
 		areaOptions = [],
+		areaLabel = 'Area of interest',
 		from = $bindable(''),
 		to = $bindable(''),
 		datePresets = [],
@@ -66,7 +81,8 @@
 		confidenceLabel,
 		exportLabel = 'Export analysis',
 		exportOptions = [],
-		onreset
+		onreset,
+		action
 	}: Props = $props();
 
 	let exportOpen = $state(false);
@@ -82,6 +98,18 @@
 	aria-label="Filters"
 	onsubmit={(event) => event.preventDefault()}
 >
+	{#if fields.includes('period')}
+		<FilterField label={periodLabel} class="min-w-56 flex-1">
+			<DropdownSelect
+				bind:value={period}
+				options={periodOptions}
+				label={periodLabel}
+				icon={CalendarRange}
+				class="w-full"
+			/>
+		</FilterField>
+	{/if}
+
 	{#if fields.includes('year')}
 		<FilterField label="Year" class="min-w-36 flex-1">
 			<DropdownSelect
@@ -95,11 +123,11 @@
 	{/if}
 
 	{#if fields.includes('area')}
-		<FilterField label="Area of interest" class="min-w-60 flex-1">
+		<FilterField label={areaLabel} class="min-w-60 flex-1">
 			<DropdownSelect
 				bind:value={area}
 				options={areaOptions}
-				label="Area of interest"
+				label={areaLabel}
 				icon={Earth}
 				class="w-full"
 			/>
@@ -140,7 +168,9 @@
 	{/if}
 
 	<FilterField class="min-w-48 flex-1">
-		{#if exportOptions.length}
+		{#if action}
+			{@render action()}
+		{:else if exportOptions.length}
 			<details class="dropdown dropdown-end w-full" bind:open={exportOpen} {@attach dismissable}>
 				<summary class="btn w-full text-label-lg whitespace-nowrap btn-info">
 					<Download class="size-4" aria-hidden="true" />
