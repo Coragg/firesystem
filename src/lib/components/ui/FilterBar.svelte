@@ -1,9 +1,11 @@
 <script lang="ts" module>
-	export type FilterName = 'year' | 'area' | 'dates' | 'sensors' | 'confidence';
+	export type FilterName = 'period' | 'year' | 'area' | 'dates' | 'sensors' | 'confidence';
 </script>
 
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
+	import CalendarRange from '@lucide/svelte/icons/calendar-range';
 	import Download from '@lucide/svelte/icons/download';
 	import Earth from '@lucide/svelte/icons/earth';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
@@ -17,10 +19,17 @@
 	type Props = {
 		/** Filtros que muestra esta pantalla. El orden en pantalla es siempre el mismo. */
 		fields?: FilterName[];
+		/** Periodo elegido de una lista (por ejemplo "2020 — 2024" o "Jan — Dec 2024"). */
+		period?: string;
+		periodOptions?: readonly string[];
+		/** Etiqueta del filtro de periodo. */
+		periodLabel?: string;
 		year?: number;
 		yearOptions?: readonly number[];
 		area?: string;
 		areaOptions?: readonly string[];
+		/** Etiqueta del filtro de área. */
+		areaLabel?: string;
 		/** Fechas en formato ISO (`AAAA-MM-DD`). */
 		from?: string;
 		to?: string;
@@ -35,14 +44,20 @@
 		exportLabel?: string;
 		/** Si se pasa, aparece el botón "Reset". */
 		onreset?: () => void;
+		/** Botón que reemplaza al de exportar en pantallas que no exportan. */
+		action?: Snippet;
 	};
 
 	let {
 		fields = ['area', 'dates', 'sensors', 'confidence'],
+		period = $bindable(''),
+		periodOptions = [],
+		periodLabel = 'Reporting period',
 		year = $bindable(0),
 		yearOptions = [],
 		area = $bindable(''),
 		areaOptions = [],
+		areaLabel = 'Area of interest',
 		from = $bindable(''),
 		to = $bindable(''),
 		sensors = $bindable([]),
@@ -51,7 +66,8 @@
 		dateLabel = 'Time range',
 		confidenceLabel,
 		exportLabel = 'Export analysis',
-		onreset
+		onreset,
+		action
 	}: Props = $props();
 </script>
 
@@ -60,6 +76,18 @@
 	aria-label="Filters"
 	onsubmit={(event) => event.preventDefault()}
 >
+	{#if fields.includes('period')}
+		<FilterField label={periodLabel} class="min-w-56 flex-1">
+			<SelectField
+				bind:value={period}
+				options={periodOptions}
+				label={periodLabel}
+				icon={CalendarRange}
+				class="w-full"
+			/>
+		</FilterField>
+	{/if}
+
 	{#if fields.includes('year')}
 		<FilterField label="Year" class="min-w-36 flex-1">
 			<SelectField
@@ -73,11 +101,11 @@
 	{/if}
 
 	{#if fields.includes('area')}
-		<FilterField label="Area of interest" class="min-w-60 flex-1">
+		<FilterField label={areaLabel} class="min-w-60 flex-1">
 			<SelectField
 				bind:value={area}
 				options={areaOptions}
-				label="Area of interest"
+				label={areaLabel}
 				icon={Earth}
 				class="w-full"
 			/>
@@ -118,9 +146,13 @@
 	{/if}
 
 	<FilterField class="min-w-44 flex-1">
-		<button type="button" class="btn w-full text-label-lg btn-info">
-			<Download class="size-4" aria-hidden="true" />
-			{exportLabel}
-		</button>
+		{#if action}
+			{@render action()}
+		{:else}
+			<button type="button" class="btn w-full text-label-lg btn-info">
+				<Download class="size-4" aria-hidden="true" />
+				{exportLabel}
+			</button>
+		{/if}
 	</FilterField>
 </form>
