@@ -6,6 +6,7 @@
 	import Database from '@lucide/svelte/icons/database';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
+	import BrandMark from './BrandMark.svelte';
 
 	type NavItem = { label: string; href: string; icon: Component };
 	type NavSection = { title: string; items: NavItem[] };
@@ -35,12 +36,7 @@
 
 <aside class="flex min-h-full w-sidebar flex-col bg-base-300 text-base-content">
 	<a href="/" class="flex items-center gap-3 border-b border-base-content/10 px-6 py-6 2xl:py-8">
-		<span
-			class="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-title-sm text-base-100 2xl:size-10"
-			aria-hidden="true"
-		>
-			F
-		</span>
+		<BrandMark class="size-8 2xl:size-10" />
 		<span class="flex flex-col">
 			<span class="text-title-sm uppercase">Firewatch</span>
 			<span class="text-overline whitespace-nowrap text-base-content/70 uppercase">
