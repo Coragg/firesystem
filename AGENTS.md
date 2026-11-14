@@ -7,7 +7,8 @@ FireSystem is the SvelteKit frontend for the FireSystem application. It is built
 - **Language:** TypeScript
 - **Framework:** SvelteKit with Svelte 5
 - **Package manager:** pnpm
-- **Styling:** Tailwind CSS 4
+- **Styling:** Tailwind CSS 4 with daisyUI 5 (custom themes)
+- **Icons, maps, charts:** Lucide (`@lucide/svelte`), Leaflet, ECharts
 - **Testing:** Vitest (Node and browser projects)
 - **Build tool:** Vite
 
@@ -19,8 +20,23 @@ FireSystem is the SvelteKit frontend for the FireSystem application. It is built
 │   ├── app.html             # HTML shell for the SvelteKit app
 │   ├── app.d.ts             # App-wide TypeScript declarations
 │   ├── lib/                 # Shared components, utilities, and assets
-│   │   └── assets/          # Static assets imported by application code
+│   │   ├── assets/          # Static assets imported by application code
+│   │   ├── components/      # UI components: layout/, ui/, charts/, map/, and one folder per screen
+│   │   ├── styles/          # Global design tokens: colors.css, spacing.css, typography.css
+│   │   ├── data/            # Placeholder data until the backend API exists
+│   │   ├── charts/          # ECharts setup (only the modules in use)
+│   │   ├── map/             # Map configuration (basemap tile provider)
+│   │   ├── sensors.ts       # MODIS / VIIRS definitions and their theme colors
+│   │   ├── frp.ts           # Fire radiative power levels and their theme colors
+│   │   ├── activity.ts      # Summaries of a daily activity series
+│   │   ├── theme.ts         # Reads theme tokens for ECharts and Leaflet
+│   │   ├── toast.svelte.ts  # App-wide toast notifications (shown by ui/Toaster)
+│   │   ├── dropdown.ts      # Closes <details> dropdowns on outside click / Escape
+│   │   ├── export.ts        # Client-side CSV and GeoJSON downloads
+│   │   └── types.ts         # Shared domain types
 │   └── routes/              # SvelteKit file-based routes and layouts
+│       ├── layout.css       # Tailwind entry point and daisyUI themes
+│       └── (app)/           # Signed-in app: shared sidebar layout and its pages
 ├── static/                  # Public files served from the site root (when needed)
 ├── package.json             # Scripts and dependency declarations
 ├── pnpm-lock.yaml           # Locked dependency versions
