@@ -8,78 +8,81 @@
 	import Panel from '#lib/components/ui/Panel.svelte';
 	import SensorLegend from '#lib/components/ui/SensorLegend.svelte';
 	import { monthNames } from '#lib/data/activity.ts';
-	import { areas } from '#lib/data/common.ts';
+	import { areaLabel, areas, type AreaId } from '#lib/data/common.ts';
 	import {
 		averageChange,
 		monthlyAverages,
 		notablePeriods,
+		periodLabel,
 		periods,
 		regionalShares,
 		sensorMatchRate,
 		yearlyDetections
 	} from '#lib/data/trends.ts';
+	import { formatNumber, formatPercent } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { Kpi } from '#lib/types.ts';
 
 	// Periodo y región aún no cambian los datos: se conectarán cuando exista la API.
 	let period = $state(periods[0]);
-	let area = $state(areas[0]);
-
-	const countFormat = new Intl.NumberFormat('en-US');
+	let area = $state<AreaId>(areas[0]);
 
 	// Las cifras de arriba se calculan de las detecciones por año.
 	const total = yearlyDetections.reduce((sum, item) => sum + item.count, 0);
 	const peak = yearlyDetections.reduce((best, item) => (item.count > best.count ? item : best));
 
+	// Regla de tendencias de la app: más fuego = error (rojo), menos = success.
+	const rising = averageChange >= 0;
+
 	const kpis: Kpi[] = [
 		{
-			label: `${yearlyDetections.length}-year detections`,
-			value: countFormat.format(total),
-			note: 'Across selected sensors'
+			label: m.trends_kpi_years({ years: yearlyDetections.length }),
+			value: formatNumber(total),
+			note: m.kpi_across_sensors()
 		},
 		{
-			label: 'Annual average',
-			value: countFormat.format(Math.round(total / yearlyDetections.length)),
-			highlight: averageChange.value,
-			tone: 'secondary',
-			trend: averageChange.trend,
-			note: 'vs. prior period'
+			label: m.trends_annual_average(),
+			value: formatNumber(Math.round(total / yearlyDetections.length)),
+			highlight: formatPercent(Math.abs(averageChange), 1),
+			tone: rising ? 'error' : 'success',
+			trend: rising ? 'up' : 'down',
+			note: m.kpi_vs_previous_period()
 		},
 		{
-			label: 'Peak year',
+			label: m.trends_peak_year(),
 			value: String(peak.year),
-			highlight: `${countFormat.format(peak.count)} detections`,
+			highlight: m.detections_count({ count: formatNumber(peak.count) }),
 			tone: 'warning'
 		},
 		{
-			label: 'Sensor match rate',
-			value: sensorMatchRate,
-			note: 'MODIS and VIIRS overlap'
+			label: m.trends_match_rate(),
+			value: formatPercent(sensorMatchRate, 1),
+			note: m.kpi_sensor_overlap()
 		}
 	];
 </script>
 
 <svelte:head>
-	<title>Trends & reports · Firewatch</title>
+	<title>{m.nav_trends()} · Firewatch</title>
 </svelte:head>
 
-<PageHeader
-	title="Trends & reports"
-	subtitle="Long-term patterns, sensor comparisons and notable fire periods"
-/>
+<PageHeader title={m.nav_trends()} subtitle={m.trends_subtitle()} />
 
 <FilterBar
 	fields={['period', 'area']}
 	bind:period
 	periodOptions={periods}
+	periodFormat={periodLabel}
 	bind:area
 	areaOptions={areas}
-	areaLabel="Region"
-	exportLabel="Generate report"
+	areaFormat={(id) => areaLabel(id as AreaId)}
+	areaLabel={m.filter_region()}
+	exportLabel={m.trends_generate_report()}
 />
 
 <section
 	class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-6"
-	aria-label="Key figures"
+	aria-label={m.key_figures()}
 >
 	{#each kpis as kpi (kpi.label)}
 		<KpiCard {...kpi} />
@@ -88,12 +91,12 @@
 
 <div class="grid grid-cols-1 gap-4 xl:grid-cols-12 2xl:gap-6">
 	<Panel
-		title="Annual fire activity"
-		subtitle="Average monthly detections by sensor, {period}"
+		title={m.trends_annual_title()}
+		subtitle={m.trends_annual_subtitle({ period: periodLabel(period) })}
 		class="xl:col-span-8"
 	>
 		<MonthlyActivityChart
-			months={monthNames}
+			months={monthNames()}
 			series={monthlyAverages}
 			monthLabels="short"
 			class="min-h-80 flex-1"
@@ -104,13 +107,17 @@
 		{/snippet}
 	</Panel>
 
-	<Panel title="Notable periods" subtitle="Activity above seasonal baseline" class="xl:col-span-4">
-		<CriticalPeriods periods={notablePeriods} />
+	<Panel
+		title={m.trends_notable_title()}
+		subtitle={m.trends_notable_subtitle()}
+		class="xl:col-span-4"
+	>
+		<CriticalPeriods periods={notablePeriods()} />
 	</Panel>
 
 	<Panel
-		title="Regional comparison"
-		subtitle="Relative detections across the selected region"
+		title={m.trends_regional_title()}
+		subtitle={m.trends_regional_subtitle()}
 		class="xl:col-span-12"
 	>
 		<RegionalComparison regions={regionalShares} />

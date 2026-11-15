@@ -20,18 +20,22 @@
 	import type { EChartsCoreOption, EChartsType } from 'echarts/core';
 	import type { Attachment } from 'svelte/attachments';
 	import type { ClassValue } from 'svelte/elements';
+	import { m } from '#lib/paraglide/messages.js';
 	import { cssVar, remToPx, spacingUnit, withAlpha } from '#lib/theme.ts';
+	import { themeVersion } from '#lib/theme-version.svelte.ts';
 
 	type Props = {
 		/** Recibe los tokens del tema y devuelve las opciones de ECharts. */
 		options: (tokens: ChartTokens) => EChartsCoreOption;
 		/** Descripción del gráfico para lectores de pantalla. */
 		label: string;
+		/** Sin datos que mostrar: aparece un aviso sobre el gráfico vacío. */
+		empty?: boolean;
 		/** Alto del gráfico (por ejemplo `h-72`). */
 		class?: ClassValue;
 	};
 
-	let { options, label, class: className }: Props = $props();
+	let { options, label, empty = false, class: className }: Props = $props();
 
 	function readTokens(node: HTMLElement): ChartTokens {
 		const text = cssVar(node, '--color-base-content');
@@ -74,11 +78,25 @@
 		};
 	};
 
-	// Se vuelve a aplicar cada vez que cambian los datos que lee `options` (series, meses...).
+	// Se vuelve a aplicar cada vez que cambian los datos que lee `options` (series, meses...)
+	// o el tema (los colores se leen del CSS en ese momento).
 	$effect(() => {
+		void themeVersion.value;
 		if (!instance || !host) return;
 		instance.setOption(options(readTokens(host)), { notMerge: true });
 	});
 </script>
 
-<div {@attach chart} class={['w-full', className]} role="img" aria-label={label}></div>
+<!-- Mientras ECharts carga, el propio contenedor se muestra como skeleton. -->
+<div
+	{@attach chart}
+	class={['relative w-full', !instance && 'skeleton', className]}
+	role="img"
+	aria-label={label}
+>
+	{#if empty && instance}
+		<p class="absolute inset-0 z-10 grid place-items-center text-body text-base-content/70">
+			{m.chart_empty()}
+		</p>
+	{/if}
+</div>

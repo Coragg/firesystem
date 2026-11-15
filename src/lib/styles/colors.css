@@ -84,6 +84,11 @@
 	--color-info-strong: var(--color-info-900);
 	--color-secondary-strong: var(--color-secondary-500);
 
+	/* Acción principal (exportar, generar reporte, reproducir): azul, para no confundirse con
+	   los colores de sensor (naranja MODIS, teal VIIRS) ni con los de estado. Alias. */
+	--color-action: var(--color-info-500);
+	--color-action-content: var(--color-blanco);
+
 	/* Borde de los campos de filtro (selects, inputs, dropdowns, chips): mismo tono que los
 	   divisores de paneles, un poco más marcado; más visible al pasar el cursor. Alias. */
 	--color-field-border: color-mix(in oklab, var(--color-base-content) 12%, transparent);

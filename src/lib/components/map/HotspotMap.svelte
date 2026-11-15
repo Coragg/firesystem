@@ -18,10 +18,13 @@
 	import { untrack, type Snippet } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import type { ClassValue } from 'svelte/elements';
+	import { formatDecimal } from '#lib/format.ts';
 	import { frpLevel, frpLevels } from '#lib/frp.ts';
 	import { basemap } from '#lib/map/basemap.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { sensors } from '#lib/sensors.ts';
 	import { cssVar, spacingUnit } from '#lib/theme.ts';
+	import { themeVersion } from '#lib/theme-version.svelte.ts';
 	import { notify } from '#lib/toast.svelte.ts';
 	import type { Hotspot } from '#lib/types.ts';
 
@@ -39,6 +42,8 @@
 		 * escala. Sin esto, el mapa usa el zoom por defecto de Leaflet (variante compacta).
 		 */
 		controls?: boolean;
+		/** Al cambiar, el mapa vuelve a la vista del área (por ejemplo, al restablecer filtros). */
+		viewVersion?: number;
 		/** Detección seleccionada: se marca con un anillo. */
 		selectedId?: number;
 		onselect?: (id: number) => void;
@@ -55,6 +60,7 @@
 		label,
 		colorMode = 'combined',
 		controls = false,
+		viewVersion = 0,
 		selectedId,
 		onselect,
 		overlay,
@@ -117,7 +123,7 @@
 
 	// Si cambia el área (centro o zoom), el mapa vuela hasta ella.
 	$effect(() => {
-		const view = { center, zoom };
+		const view = { center, zoom, version: viewVersion };
 		untrack(() => map)?.flyTo(view.center, view.zoom, { duration: 0.8 });
 	});
 
@@ -125,7 +131,7 @@
 	function locate() {
 		if (!map || !leaflet || !container) return;
 		if (!('geolocation' in navigator)) {
-			notify('Your browser does not share its location.', 'warning');
+			notify(m.map_locate_unsupported(), 'warning');
 			return;
 		}
 		const L = leaflet;
@@ -157,26 +163,23 @@
 					weight: unit / 2,
 					fillColor: color,
 					fillOpacity: 1
-				}).bindTooltip('You are here')
+				}).bindTooltip(m.map_you_are_here())
 			]).addTo(instance);
 		}
 		function failed(event: ErrorEvent) {
 			done();
 			// Código 1 de la API de geolocalización: el usuario negó el permiso.
-			notify(
-				event.code === 1
-					? 'Location access was denied. Allow it in your browser to center the map on you.'
-					: 'We could not get your location. Try again in a moment.',
-				'warning'
-			);
+			notify(event.code === 1 ? m.map_locate_denied() : m.map_locate_failed(), 'warning');
 		}
 		instance.on('locationfound', found);
 		instance.on('locationerror', failed);
 		instance.locate({ setView: true, maxZoom: 11, timeout: 10000 });
 	}
 
-	// Sincroniza los puntos con Leaflet cada vez que cambian los datos, el modo o la selección.
+	// Sincroniza los puntos con Leaflet cada vez que cambian los datos, el modo, la selección
+	// o el tema (los colores se leen del CSS al dibujar).
 	$effect(() => {
+		void themeVersion.value;
 		if (!leaflet || !map || !container) return;
 		const L = leaflet;
 		const node = container;
@@ -205,7 +208,7 @@
 				fillColor: cssVar(node, colorVar(point)),
 				fillOpacity: 1
 			})
-				.bindTooltip(`${point.sensor} · ${point.frp.toFixed(1)} MW`)
+				.bindTooltip(`${point.sensor} · ${formatDecimal(point.frp)} MW`)
 				.on('click', () => onselect?.(point.id))
 				.addTo(group);
 		}
@@ -245,7 +248,7 @@
 			<button
 				type="button"
 				class="btn btn-square join-item bg-base-100"
-				aria-label="Zoom in"
+				aria-label={m.map_zoom_in()}
 				onclick={() => map?.zoomIn()}
 			>
 				<Plus class="size-4" aria-hidden="true" />
@@ -253,7 +256,7 @@
 			<button
 				type="button"
 				class="btn btn-square join-item bg-base-100"
-				aria-label="Zoom out"
+				aria-label={m.map_zoom_out()}
 				onclick={() => map?.zoomOut()}
 			>
 				<Minus class="size-4" aria-hidden="true" />
@@ -261,8 +264,8 @@
 			<button
 				type="button"
 				class="btn btn-square join-item bg-base-100"
-				aria-label="Back to area view"
-				title="Back to area view"
+				aria-label={m.map_area_view()}
+				title={m.map_area_view()}
 				onclick={() => map?.setView(center, zoom)}
 			>
 				<House class="size-4" aria-hidden="true" />
@@ -270,8 +273,8 @@
 			<button
 				type="button"
 				class="btn btn-square join-item bg-base-100"
-				aria-label="Center on my location"
-				title="Center on my location"
+				aria-label={m.map_locate()}
+				title={m.map_locate()}
 				disabled={locating}
 				onclick={locate}
 			>
@@ -281,6 +284,20 @@
 					<LocateFixed class="size-4" aria-hidden="true" />
 				{/if}
 			</button>
+		</div>
+	{/if}
+
+	<!-- Mientras Leaflet carga: un bloque gris animado del mismo tamaño que el mapa. -->
+	{#if !map}
+		<div class="skeleton absolute inset-0 rounded-box" aria-hidden="true"></div>
+	{:else if !hotspots.length}
+		<!-- Sin detecciones para los filtros: aviso centrado, el mapa sigue navegable. -->
+		<div class="pointer-events-none absolute inset-0 grid place-items-center p-4">
+			<p
+				class="rounded-box border border-base-content/10 bg-base-100 px-4 py-3 text-body text-base-content/70 shadow-sm"
+			>
+				{m.map_empty()}
+			</p>
 		</div>
 	{/if}
 

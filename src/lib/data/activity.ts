@@ -12,20 +12,8 @@ export const dataYear = 2024;
 export const yearTotal = 24891;
 export const peakDay: DailyActivity = { date: '2024-02-14', count: 1284 };
 
-export const monthNames = [
-	'January',
-	'February',
-	'March',
-	'April',
-	'May',
-	'June',
-	'July',
-	'August',
-	'September',
-	'October',
-	'November',
-	'December'
-];
+/** Nombres de los meses en el idioma activo (enero a diciembre). */
+export { monthNames } from '#lib/format.ts';
 
 export const monthlyActivity: SensorSeries[] = [
 	{ sensor: 'MODIS', values: [520, 1060, 790, 650, 570, 370, 290, 330, 460, 600, 700, 890] },

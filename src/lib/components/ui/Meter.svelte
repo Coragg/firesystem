@@ -3,6 +3,8 @@
 </script>
 
 <script lang="ts">
+	import { formatPercent } from '#lib/format.ts';
+
 	type Props = {
 		label: string;
 		/** Proporción de 0 a 1. */
@@ -13,8 +15,6 @@
 	};
 
 	let { label, value, tone = 'primary', layout = 'stacked' }: Props = $props();
-
-	const percentFormat = new Intl.NumberFormat('en-US', { style: 'percent' });
 
 	// El color va en la barra; el texto queda legible.
 	const toneClass: Record<MeterTone, string> = {
@@ -35,7 +35,7 @@
 			inline ? 'text-body-lg text-base-content/70 md:order-last md:col-span-1' : 'text-label'
 		]}
 	>
-		{percentFormat.format(value)}
+		{formatPercent(value)}
 	</span>
 	<span class={['col-span-12 flex', inline && 'md:col-span-9']}>
 		<progress class={['progress', toneClass[tone]]} {value} max="1" aria-label={label}></progress>

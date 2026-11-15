@@ -34,12 +34,12 @@
 	lista de radios con forma de botón. Sin `theme-controller`: aquí no cambia el tema.
 -->
 <details class={['dropdown', className]} bind:open {@attach dismissable}>
-	<summary class="btn w-full btn-field justify-start text-label-lg">
+	<summary class="btn w-full btn-field justify-start text-label-lg" title={format(value)}>
 		{#if Icon}
 			<Icon class="size-4 shrink-0 text-base-content/70" aria-hidden="true" />
 		{/if}
 		<span class="sr-only">{label}:</span>
-		<span class="flex-1 truncate text-start">{format(value)}</span>
+		<span class="w-0 min-w-0 flex-1 truncate text-start">{format(value)}</span>
 		<ChevronDown
 			class={['size-4 shrink-0 text-base-content/70 transition-transform', open && 'rotate-180']}
 			aria-hidden="true"

@@ -3,6 +3,8 @@
 	import Play from '@lucide/svelte/icons/play';
 	import { onDestroy } from 'svelte';
 	import { heatScale } from '#lib/charts/heat.ts';
+	import { formatDate, formatNumber } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { DailyActivity } from '#lib/types.ts';
 
 	type Props = {
@@ -21,24 +23,18 @@
 
 	let playing = $state(false);
 
-	const dayFormat = new Intl.DateTimeFormat('en-US', {
-		month: 'short',
-		day: '2-digit',
-		timeZone: 'UTC'
-	});
-	const countFormat = new Intl.NumberFormat('en-US');
 
 	let max = $derived(Math.max(1, ...days.map((day) => day.count)));
 	let level = $derived(heatScale(days.map((day) => day.count)));
 	let last = $derived(days.length - 1);
 
 	function describe(day: DailyActivity): string {
-		return `${dayFormat.format(new Date(day.date))}: ${countFormat.format(day.count)} detections`;
+		return m.timeslider_day({ date: formatDate(day.date, 'day'), count: formatNumber(day.count) });
 	}
 
 	/** Etiqueta de fecha cada 7 días, como en el boceto. */
 	function tick(index: number): string {
-		return index % 7 === 0 ? dayFormat.format(new Date(days[index].date)) : '';
+		return index % 7 === 0 ? formatDate(days[index].date, 'day') : '';
 	}
 
 	let timer: ReturnType<typeof setInterval> | undefined;
@@ -63,10 +59,10 @@
 	onDestroy(() => clearInterval(timer));
 </script>
 
-<section class="card min-w-0 bg-base-100" aria-label="Time slider">
+<section class="card min-w-0 bg-base-100" aria-label={m.timeslider_title()}>
 	<div class="card-body flex-col gap-6 p-5 lg:flex-row lg:items-center 2xl:p-6">
 		<header class="flex shrink-0 flex-col gap-1 lg:w-56">
-			<span class="text-overline text-base-content/70 uppercase">Time slider</span>
+			<span class="text-overline text-base-content/70 uppercase">{m.timeslider_title()}</span>
 			<h2 class="card-title text-title-md">{title}</h2>
 			<p class="text-body text-base-content/70">{subtitle}</p>
 		</header>
@@ -97,7 +93,7 @@
 				max={last}
 				step="1"
 				bind:value
-				aria-label="Selected day"
+				aria-label={m.timeslider_selected_day()}
 				aria-valuetext={days[value] ? describe(days[value]) : undefined}
 			/>
 
@@ -110,8 +106,8 @@
 
 		<button
 			type="button"
-			class="btn btn-square shrink-0 btn-info"
-			aria-label={playing ? 'Pause' : 'Play'}
+			class="btn btn-square shrink-0 btn-action"
+			aria-label={playing ? m.timeslider_pause() : m.timeslider_play()}
 			onclick={toggle}
 		>
 			{#if playing}

@@ -42,6 +42,9 @@ export type Severity = 'critical' | 'elevated';
 
 export type CriticalPeriod = {
 	id: string;
+	/** Fechas ISO del periodo, cuando se conocen (permiten filtrar por él). */
+	from?: string;
+	to?: string;
 	range: string;
 	severity: Severity;
 	detail: string;

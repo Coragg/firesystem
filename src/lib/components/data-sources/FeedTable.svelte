@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import type { Feed } from '#lib/types.ts';
 
 	type Props = { feeds: Feed[] };
@@ -11,10 +12,10 @@
 	<table class="table text-body">
 		<thead>
 			<tr class="text-overline text-base-content/70 uppercase">
-				<th scope="col">Sensor / product</th>
-				<th scope="col">Coverage</th>
-				<th scope="col">Resolution</th>
-				<th scope="col">Status</th>
+				<th scope="col">{m.feed_col_sensor()}</th>
+				<th scope="col">{m.feed_col_coverage()}</th>
+				<th scope="col">{m.sources_resolution()}</th>
+				<th scope="col">{m.feed_col_status()}</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -26,7 +27,7 @@
 							<span class="ms-2 text-caption text-base-content/70">{feed.product}</span>
 						{/if}
 					</th>
-					<td class="whitespace-nowrap text-base-content/70">Since {feed.since}</td>
+					<td class="whitespace-nowrap text-base-content/70">{m.feed_since({ year: feed.since })}</td>
 					<td class="whitespace-nowrap text-base-content/70">{feed.resolution}</td>
 					<td>
 						<!-- El color va en el punto; el texto queda legible. -->

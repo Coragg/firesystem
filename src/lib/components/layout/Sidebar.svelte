@@ -6,7 +6,9 @@
 	import Database from '@lucide/svelte/icons/database';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
+	import { m } from '#lib/paraglide/messages.js';
 	import BrandMark from './BrandMark.svelte';
+	import UserMenu from './UserMenu.svelte';
 
 	type NavItem = { label: string; href: string; icon: Component };
 	type NavSection = { title: string; items: NavItem[] };
@@ -19,17 +21,17 @@
 
 	const sections: NavSection[] = [
 		{
-			title: 'Workspace',
+			title: m.nav_workspace(),
 			items: [
-				{ label: 'Overview', href: '/', icon: LayoutDashboard },
-				{ label: 'Fire map', href: '/fire-map', icon: MapPinned },
-				{ label: 'Activity calendar', href: '/activity-calendar', icon: CalendarDays },
-				{ label: 'Trends & reports', href: '/trends', icon: ChartNoAxesCombined }
+				{ label: m.nav_overview(), href: '/', icon: LayoutDashboard },
+				{ label: m.nav_fire_map(), href: '/fire-map', icon: MapPinned },
+				{ label: m.nav_activity_calendar(), href: '/activity-calendar', icon: CalendarDays },
+				{ label: m.nav_trends(), href: '/trends', icon: ChartNoAxesCombined }
 			]
 		},
 		{
-			title: 'Data',
-			items: [{ label: 'Data sources', href: '/data-sources', icon: Database }]
+			title: m.nav_data(),
+			items: [{ label: m.nav_data_sources(), href: '/data-sources', icon: Database }]
 		}
 	];
 </script>
@@ -40,12 +42,12 @@
 		<span class="flex flex-col">
 			<span class="text-title-sm uppercase">Firewatch</span>
 			<span class="text-overline whitespace-nowrap text-base-content/70 uppercase">
-				Earth Intelligence
+				{m.brand_tagline()}
 			</span>
 		</span>
 	</a>
 
-	<nav class="flex-1 overflow-y-auto px-3 py-4" aria-label="Main">
+	<nav class="flex-1 overflow-y-auto px-3 py-4" aria-label={m.nav_main()}>
 		{#each sections as section (section.title)}
 			<ul class="menu w-full gap-1 p-0 pb-4 text-body-lg">
 				<li class="menu-title px-3 text-overline text-base-content/70 uppercase">
@@ -68,15 +70,7 @@
 		{/each}
 	</nav>
 
-	<div class="mx-5 flex items-center gap-3 border-t border-base-content/10 py-6">
-		<div class="avatar avatar-placeholder">
-			<div class="w-10 rounded-full bg-base-content/10">
-				<span class="text-overline uppercase">{user.initials}</span>
-			</div>
-		</div>
-		<div class="flex min-w-0 flex-col">
-			<span class="truncate text-body-lg">{user.name}</span>
-			<span class="truncate text-caption text-base-content/70 italic">{user.detail}</span>
-		</div>
+	<div class="mx-3 border-t border-base-content/10 py-4">
+		<UserMenu {user} />
 	</div>
 </aside>

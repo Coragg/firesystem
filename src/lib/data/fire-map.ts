@@ -2,6 +2,7 @@
  * Datos de ejemplo de la pantalla Fire map (febrero de 2024), tomados del boceto de Penpot.
  * Son provisionales: se reemplazan por la API cuando exista, manteniendo los mismos tipos.
  */
+import { m } from '#lib/paraglide/messages.js';
 import type { Detection } from '#lib/types.ts';
 import { clusters, seeded } from './common.ts';
 
@@ -12,11 +13,13 @@ export const defaultDayIndex = 13;
 
 export { confidenceFilters } from './common.ts';
 
-/** Capas del mapa y el modo de color que activa cada una. */
-export const mapLayers = {
-	'Fire radiative power': 'frp',
-	Sensor: 'sensor'
-} as const;
+/** Capas del mapa (identificador = modo de color del mapa). El texto sale de `mapLayerLabel`. */
+export const mapLayers = ['frp', 'sensor'] as const;
+export type MapLayer = (typeof mapLayers)[number];
+
+export function mapLayerLabel(layer: MapLayer): string {
+	return layer === 'frp' ? m.map_layer_frp_long() : m.map_layer_sensor();
+}
 
 const satellites = {
 	MODIS: ['MODIS Terra', 'MODIS Aqua'],

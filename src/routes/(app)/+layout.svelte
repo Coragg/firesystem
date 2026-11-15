@@ -4,6 +4,7 @@
 	import Sidebar from '#lib/components/layout/Sidebar.svelte';
 	import Toaster from '#lib/components/ui/Toaster.svelte';
 	import { currentUser } from '#lib/data/common.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -14,7 +15,7 @@
 
 	<div class="drawer-content flex min-h-dvh min-w-0 flex-col bg-base-200">
 		<div class="navbar border-b border-base-content/10 bg-base-300 lg:hidden">
-			<label for="app-drawer" class="btn btn-square btn-ghost" aria-label="Open menu">
+			<label for="app-drawer" class="btn btn-square btn-ghost" aria-label={m.menu_open()}>
 				<Menu class="size-5" aria-hidden="true" />
 			</label>
 			<span class="flex items-center gap-2 px-2">
@@ -31,7 +32,7 @@
 	</div>
 
 	<div class="drawer-side z-20">
-		<label for="app-drawer" aria-label="Close menu" class="drawer-overlay"></label>
+		<label for="app-drawer" aria-label={m.menu_close()} class="drawer-overlay"></label>
 		<Sidebar user={currentUser} />
 	</div>
 </div>

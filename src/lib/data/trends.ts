@@ -2,9 +2,16 @@
  * Datos de ejemplo de la pantalla Trends & reports, tomados del boceto de Penpot.
  * Son provisionales: se reemplazan por la API cuando exista, manteniendo los mismos tipos.
  */
+import { formatDateRange, formatDecimal, formatNumber } from '#lib/format.ts';
+import { m } from '#lib/paraglide/messages.js';
 import type { CriticalPeriod, SensorSeries } from '#lib/types.ts';
 
-export const periods = ['2020 — 2024', '2015 — 2019', '2010 — 2014'];
+/** Periodos del reporte (identificadores "AAAA-AAAA"). El texto sale de `periodLabel`. */
+export const periods = ['2020-2024', '2015-2019', '2010-2014'];
+
+export function periodLabel(id: string): string {
+	return id.replace('-', ' – ');
+}
 
 /** Detecciones por año del periodo. Suman 118.420, con máximo en 2023, como el boceto. */
 export const yearlyDetections = [
@@ -15,10 +22,11 @@ export const yearlyDetections = [
 	{ year: 2024, count: 24891 }
 ];
 
-/** Variación del promedio anual frente al periodo anterior. */
-export const averageChange = { value: '8.2%', trend: 'up' as const };
+/** Variación del promedio anual frente al periodo anterior (proporción). */
+export const averageChange = 0.082;
 
-export const sensorMatchRate = '87.4%';
+/** Coincidencia entre sensores (proporción). */
+export const sensorMatchRate = 0.874;
 
 /** Promedio mensual de detecciones por sensor en el periodo. */
 export const monthlyAverages: SensorSeries[] = [
@@ -26,28 +34,25 @@ export const monthlyAverages: SensorSeries[] = [
 	{ sensor: 'VIIRS', values: [550, 850, 800, 700, 600, 500, 430, 450, 510, 620, 720, 880] }
 ];
 
-export const notablePeriods: CriticalPeriod[] = [
-	{
-		id: '2023-02-14',
-		range: 'Feb 14–18, 2023',
-		severity: 'critical',
-		detail: '6.2× seasonal baseline, 3,814 detections'
-	},
-	{
-		id: '2022-08-03',
-		range: 'Aug 03–07, 2022',
-		severity: 'elevated',
-		detail: '2.1× seasonal baseline, 927 detections'
-	},
-	{
-		id: '2021-01-10',
-		range: 'Jan 10–12, 2021',
-		severity: 'elevated',
-		detail: '1.8× seasonal baseline, 614 detections'
-	}
-];
+const notable = [
+	{ from: '2023-02-14', to: '2023-02-18', severity: 'critical', ratio: 6.2, count: 3814 },
+	{ from: '2022-08-03', to: '2022-08-07', severity: 'elevated', ratio: 2.1, count: 927 },
+	{ from: '2021-01-10', to: '2021-01-12', severity: 'elevated', ratio: 1.8, count: 614 }
+] as const;
 
-/** Detecciones relativas por región (0 a 1). */
+/** Periodos destacados, con textos en el idioma activo. */
+export function notablePeriods(): CriticalPeriod[] {
+	return notable.map((item) => ({
+		id: item.from,
+		from: item.from,
+		to: item.to,
+		range: formatDateRange(item.from, item.to),
+		severity: item.severity,
+		detail: m.critical_detail({ ratio: formatDecimal(item.ratio), count: formatNumber(item.count) })
+	}));
+}
+
+/** Detecciones relativas por región (0 a 1). Los nombres de región son nombres propios. */
 export const regionalShares = [
 	{ region: 'Biobío', share: 0.86 },
 	{ region: 'Araucanía', share: 0.68 },

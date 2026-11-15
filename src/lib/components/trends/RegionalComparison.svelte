@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Meter from '#lib/components/ui/Meter.svelte';
+	import { m } from '#lib/paraglide/messages.js';
 
 	type Props = {
 		/** Detecciones relativas por región (0 a 1). */
@@ -28,9 +29,9 @@
 
 	{#if top}
 		<aside class="flex flex-col justify-center gap-2 rounded-box bg-base-200 p-5 lg:w-80">
-			<span class="text-overline text-base-content/70 uppercase">Key takeaway</span>
+			<span class="text-overline text-base-content/70 uppercase">{m.trends_takeaway_label()}</span>
 			<p class="text-body-lg">
-				{top.region} accounts for the largest share of harmonized detections in this period.
+				{m.trends_takeaway({ region: top.region })}
 			</p>
 		</aside>
 	{/if}

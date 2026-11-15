@@ -8,24 +8,32 @@
 	import Meter from '#lib/components/ui/Meter.svelte';
 	import Panel from '#lib/components/ui/Panel.svelte';
 	import StatusBadge from '#lib/components/ui/StatusBadge.svelte';
-	import { areas, lastUpdate, region } from '#lib/data/common.ts';
-	import { coverage, dataWindows, feeds, pipeline, sources } from '#lib/data/data-sources.ts';
+	import { areaLabel, areas, minutesSinceUpdate, region, type AreaId } from '#lib/data/common.ts';
+	import {
+		coverage,
+		dataWindowLabel,
+		dataWindows,
+		feeds,
+		pipeline,
+		sources
+	} from '#lib/data/data-sources.ts';
+	import { formatMinutesAgo } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// Ventana y región aún no cambian los datos: se conectarán cuando exista la API.
 	let period = $state(dataWindows[0]);
-	let area = $state(areas[0]);
+	let area = $state<AreaId>(areas[0]);
 </script>
 
 <svelte:head>
-	<title>Data sources · Firewatch</title>
+	<title>{m.nav_data_sources()} · Firewatch</title>
 </svelte:head>
 
-<PageHeader
-	title="Data sources"
-	subtitle="Sensor coverage, feed health and harmonization pipeline"
->
+<PageHeader title={m.nav_data_sources()} subtitle={m.sources_subtitle()}>
 	{#snippet actions()}
-		<StatusBadge tone="success" dot>Last sync {lastUpdate}</StatusBadge>
+		<StatusBadge tone="success" dot>
+			{m.sources_last_sync({ when: formatMinutesAgo(minutesSinceUpdate) })}
+		</StatusBadge>
 	{/snippet}
 </PageHeader>
 
@@ -33,34 +41,40 @@
 	fields={['period', 'area']}
 	bind:period
 	periodOptions={dataWindows}
-	periodLabel="Data window"
+	periodFormat={dataWindowLabel}
+	periodLabel={m.sources_data_window()}
 	bind:area
 	areaOptions={areas}
-	areaLabel="Region"
+	areaFormat={(id) => areaLabel(id as AreaId)}
+	areaLabel={m.filter_region()}
 >
 	{#snippet action()}
 		<!-- Sin efecto todavía: consultará el estado de las fuentes cuando exista la API. -->
-		<button type="button" class="btn w-full border-base-content/20 bg-base-100 text-label-lg">
+		<button type="button" class="btn w-full btn-field text-label-lg">
 			<RefreshCw class="size-4" aria-hidden="true" />
-			Refresh status
+			{m.sources_refresh()}
 		</button>
 	{/snippet}
 </FilterBar>
 
-<section class="grid grid-cols-1 gap-4 xl:grid-cols-3 2xl:gap-6" aria-label="Sources">
+<section class="grid grid-cols-1 gap-4 xl:grid-cols-3 2xl:gap-6" aria-label={m.sources_aria()}>
 	{#each sources as source (source.id)}
 		<SourceCard {source} />
 	{/each}
 </section>
 
 <div class="grid grid-cols-1 gap-4 xl:grid-cols-12 2xl:gap-6">
-	<Panel title="Feed coverage" subtitle="Products and collection windows" class="xl:col-span-8">
+	<Panel
+		title={m.sources_feed_title()}
+		subtitle={m.sources_feed_subtitle()}
+		class="xl:col-span-8"
+	>
 		<FeedTable {feeds} />
 	</Panel>
 
 	<Panel
-		title="Coverage snapshot"
-		subtitle="{region.shortName}, last 12 months"
+		title={m.sources_coverage_title()}
+		subtitle={m.sources_coverage_subtitle({ region: region.shortName })}
 		class="xl:col-span-4"
 	>
 		<ul class="flex flex-1 flex-col gap-6">
@@ -70,13 +84,13 @@
 		</ul>
 
 		{#snippet footer()}
-			Coverage varies by overpass and cloud conditions.
+			{m.sources_coverage_note()}
 		{/snippet}
 	</Panel>
 
 	<Panel
-		title="Harmonization pipeline"
-		subtitle="How satellite observations become comparable activity records"
+		title={m.sources_pipeline_title()}
+		subtitle={m.sources_pipeline_subtitle()}
 		class="xl:col-span-12"
 	>
 		<PipelineSteps steps={pipeline} />

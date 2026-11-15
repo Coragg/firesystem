@@ -3,14 +3,14 @@
 	import Satellite from '@lucide/svelte/icons/satellite';
 	import StatBlock from '#lib/components/ui/StatBlock.svelte';
 	import StatusBadge from '#lib/components/ui/StatusBadge.svelte';
+	import { formatNumber } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { sensors } from '#lib/sensors.ts';
 	import type { DataSource } from '#lib/types.ts';
 
 	type Props = { source: DataSource };
 
 	let { source }: Props = $props();
-
-	const countFormat = new Intl.NumberFormat('en-US');
 
 	// Un sensor usa su color y el ícono de satélite; la capa armonizada, `info` y el de capas.
 	let Icon = $derived(source.sensor ? Satellite : Layers);
@@ -36,8 +36,8 @@
 		</div>
 
 		<div class="flex flex-wrap items-end justify-between gap-4">
-			<StatBlock label="Detections" value={countFormat.format(source.detections)} size="lg" />
-			<StatBlock label="Resolution" value={source.resolution} />
+			<StatBlock label={m.sources_detections()} value={formatNumber(source.detections)} size="lg" />
+			<StatBlock label={m.sources_resolution()} value={source.resolution} />
 		</div>
 	</div>
 </article>

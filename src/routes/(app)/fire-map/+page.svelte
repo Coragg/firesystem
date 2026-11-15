@@ -5,25 +5,36 @@
 	import FrpLegend from '#lib/components/map/FrpLegend.svelte';
 	import HotspotMap from '#lib/components/map/HotspotMap.svelte';
 	import FilterBar from '#lib/components/ui/FilterBar.svelte';
+	import DropdownSelect from '#lib/components/ui/DropdownSelect.svelte';
 	import SelectField from '#lib/components/ui/SelectField.svelte';
 	import SensorLegend from '#lib/components/ui/SensorLegend.svelte';
 	import StatusBadge from '#lib/components/ui/StatusBadge.svelte';
-	import { areas, lastUpdate, region, years } from '#lib/data/common.ts';
+	import {
+		areaLabel,
+		areas,
+		confidenceFilterLabel,
+		confidenceOptions,
+		minutesSinceUpdate,
+		region,
+		years,
+		type AreaId,
+		type ConfidenceFilter
+	} from '#lib/data/common.ts';
 	import {
 		confidenceFilters,
 		defaultDayIndex,
 		defaultDetectionId,
 		detections,
+		mapLayerLabel,
 		mapLayers,
-		mapPeriod
+		mapPeriod,
+		type MapLayer
 	} from '#lib/data/fire-map.ts';
+	import { formatDate, formatMinutesAgo, formatNumber } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { Sensor } from '#lib/sensors.ts';
 	import type { DailyActivity, Detection } from '#lib/types.ts';
 
-	type LayerName = keyof typeof mapLayers;
-
-	const confidenceOptions = Object.keys(confidenceFilters);
-	const layerOptions = Object.keys(mapLayers) as LayerName[];
 	/** Radio para contar la actividad cercana a la detección seleccionada. */
 	const nearbyRadiusKm = 5;
 	/** Ventana para considerar que MODIS y VIIRS vieron el mismo fuego. */
@@ -31,21 +42,15 @@
 
 	// Área, fechas y año aún no cambian los datos: se conectarán cuando exista la API.
 	let year = $state(years[0]);
-	let area = $state(areas[0]);
+	let area = $state<AreaId>(areas[0]);
 	let from = $state(mapPeriod.from);
 	let to = $state(mapPeriod.to);
 	let selectedSensors = $state<Sensor[]>(['MODIS', 'VIIRS']);
-	let confidence = $state(confidenceOptions[0]);
-	let layer = $state<LayerName>(layerOptions[0]);
+	let confidence = $state<ConfidenceFilter>(confidenceOptions[0]);
+	let layer = $state<MapLayer>(mapLayers[0]);
 	let dayIndex = $state(defaultDayIndex);
 	let selectedId = $state(defaultDetectionId);
 
-	const countFormat = new Intl.NumberFormat('en-US');
-	const monthFormat = new Intl.DateTimeFormat('en-US', {
-		month: 'long',
-		year: 'numeric',
-		timeZone: 'UTC'
-	});
 
 	function dayOf(detection: Detection): number {
 		return new Date(detection.acquired).getUTCDate();
@@ -108,37 +113,37 @@
 		to = mapPeriod.to;
 		selectedSensors = ['MODIS', 'VIIRS'];
 		confidence = confidenceOptions[0];
-		layer = layerOptions[0];
+		layer = mapLayers[0];
 		dayIndex = defaultDayIndex;
 		selectedId = defaultDetectionId;
 	}
 </script>
 
 <svelte:head>
-	<title>Fire map · Firewatch</title>
+	<title>{m.nav_fire_map()} · Firewatch</title>
 </svelte:head>
 
-<PageHeader
-	title="Fire map"
-	subtitle="Explore active fire detections across your area of interest"
->
+<PageHeader title={m.nav_fire_map()} subtitle={m.fire_map_subtitle()}>
 	{#snippet actions()}
-		<StatusBadge tone="success" dot>Updated {lastUpdate}</StatusBadge>
-		<SelectField bind:value={year} options={years} label="Year" class="w-auto" />
+		<StatusBadge tone="success" dot>
+			{m.data_updated({ when: formatMinutesAgo(minutesSinceUpdate) })}
+		</StatusBadge>
+		<SelectField bind:value={year} options={years} label={m.filter_year()} class="w-auto" />
 	{/snippet}
 </PageHeader>
 
 <FilterBar
 	bind:area
 	areaOptions={areas}
+	areaFormat={(id) => areaLabel(id as AreaId)}
 	bind:from
 	bind:to
 	bind:sensors={selectedSensors}
 	bind:confidence
 	{confidenceOptions}
-	dateLabel="Date"
-	confidenceLabel="Confidence"
-	exportLabel="Export"
+	confidenceFormat={(id) => confidenceFilterLabel(id as ConfidenceFilter)}
+	dateLabel={m.filter_date()}
+	exportLabel={m.export_short()}
 	onreset={reset}
 />
 
@@ -147,24 +152,30 @@
 		hotspots={visible}
 		center={region.center}
 		zoom={region.zoom + 1}
-		label="Map of fire detections in {region.name}"
-		colorMode={mapLayers[layer]}
+		label={m.map_label({ region: region.name })}
+		colorMode={layer}
 		controls
 		{selectedId}
 		onselect={(id) => (selectedId = id)}
 		class="h-128 xl:col-span-8 xl:h-auto xl:min-h-160"
 	>
 		{#snippet overlay()}
-			<div class="absolute start-3 top-3">
-				<SelectField bind:value={layer} options={layerOptions} label="Map layer" class="w-auto" />
+			<div class="absolute start-3 top-3 w-56">
+				<DropdownSelect
+					bind:value={layer}
+					options={mapLayers}
+					format={mapLayerLabel}
+					label={m.map_layer()}
+					class="w-full"
+				/>
 			</div>
 			<div class="absolute end-3 top-3 rounded-full bg-base-100 shadow-sm">
 				<StatusBadge tone="neutral" dot>
-					{countFormat.format(visible.length)} detections
+					{m.detections_count({ count: formatNumber(visible.length) })}
 				</StatusBadge>
 			</div>
 			<div class="card absolute end-3 bottom-8 bg-base-100 p-3 text-caption text-base-content/70 shadow-sm">
-				{#if mapLayers[layer] === 'frp'}
+				{#if layer === 'frp'}
 					<FrpLegend />
 				{:else}
 					<SensorLegend />
@@ -189,6 +200,6 @@
 <TimeSlider
 	{days}
 	bind:value={dayIndex}
-	title={monthFormat.format(new Date(mapPeriod.from))}
-	subtitle="{countFormat.format(filtered.length)} detections"
+	title={formatDate(mapPeriod.from, 'monthYear')}
+	subtitle={m.detections_count({ count: formatNumber(filtered.length) })}
 />

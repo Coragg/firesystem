@@ -5,6 +5,7 @@
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import X from '@lucide/svelte/icons/x';
 	import type { Component } from 'svelte';
+	import { m } from '#lib/paraglide/messages.js';
 	import { dismiss, toasts, type ToastTone } from '#lib/toast.svelte.ts';
 
 	const tones: Record<ToastTone, { alert: string; icon: Component }> = {
@@ -25,7 +26,7 @@
 			<button
 				type="button"
 				class="btn btn-square btn-ghost btn-xs"
-				aria-label="Dismiss"
+				aria-label={m.toast_dismiss()}
 				onclick={() => dismiss(toast.id)}
 			>
 				<X class="size-4" aria-hidden="true" />

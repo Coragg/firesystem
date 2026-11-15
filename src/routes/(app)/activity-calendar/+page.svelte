@@ -12,21 +12,18 @@
 	import StatBlock from '#lib/components/ui/StatBlock.svelte';
 	import { dailyActivity, dataYear, monthlyActivity, monthNames } from '#lib/data/activity.ts';
 	import { heatmapInsight, kpis, watchWindow } from '#lib/data/activity-calendar.ts';
-	import { areas, years } from '#lib/data/common.ts';
+	import { areaLabel, areas, years, type AreaId } from '#lib/data/common.ts';
+	import { formatDate, formatNumber } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { Sensor } from '#lib/sensors.ts';
 
 	// Año y área aún no cambian los datos (siempre son los de `dataYear`): se conectarán
 	// cuando exista la API. Los sensores sí filtran el gráfico mensual.
 	let year = $state(years[0]);
-	let area = $state(areas[0]);
+	let area = $state<AreaId>(areas[0]);
 	let selectedSensors = $state<Sensor[]>(['MODIS', 'VIIRS']);
 
-	const countFormat = new Intl.NumberFormat('en-US');
-	const dayFormat = new Intl.DateTimeFormat('en-US', {
-		month: 'short',
-		day: 'numeric',
-		timeZone: 'UTC'
-	});
+	const months = monthNames();
 
 	const summary = summarize(dailyActivity);
 	const weeks = Math.ceil(dailyActivity.length / 7);
@@ -37,12 +34,12 @@
 </script>
 
 <svelte:head>
-	<title>Activity calendar · Firewatch</title>
+	<title>{m.nav_activity_calendar()} · Firewatch</title>
 </svelte:head>
 
 <PageHeader
-	title="Activity calendar"
-	subtitle="Daily fire activity harmonized across MODIS and VIIRS in {dataYear}"
+	title={m.nav_activity_calendar()}
+	subtitle={m.calendar_subtitle({ year: dataYear })}
 />
 
 <FilterBar
@@ -51,57 +48,62 @@
 	yearOptions={years}
 	bind:area
 	areaOptions={areas}
+	areaFormat={(id) => areaLabel(id as AreaId)}
 	bind:sensors={selectedSensors}
-	exportLabel="Export calendar"
+	exportLabel={m.export_calendar()}
 />
 
 <section
 	class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-6"
-	aria-label="Key figures"
+	aria-label={m.key_figures()}
 >
-	{#each kpis as kpi (kpi.label)}
+	{#each kpis() as kpi (kpi.label)}
 		<KpiCard {...kpi} />
 	{/each}
 </section>
 
 <div class="grid grid-cols-1 gap-4 xl:grid-cols-12 2xl:gap-6">
 	<Panel
-		title="Daily activity intensity"
-		subtitle="Each cell represents one day of {dataYear}"
+		title={m.calendar_intensity_title()}
+		subtitle={m.calendar_intensity_subtitle({ year: dataYear })}
 		class="xl:col-span-8"
 	>
 		<ActivityHeatmap
 			days={dailyActivity}
 			months="all"
-			label="Daily fire detections during {dataYear}"
+			label={m.calendar_label({ period: String(dataYear) })}
 		/>
 
 		<p class="border-t border-base-content/10 pt-4 text-body-lg text-secondary-strong">
-			{heatmapInsight}
+			{heatmapInsight()}
 		</p>
 
 		{#snippet footer()}
 			<HeatmapLegend />
-			<span class="ms-auto">Weekly view, {weeks} weeks</span>
+			<span class="ms-auto">{m.calendar_weekly_view({ weeks })}</span>
 		{/snippet}
 	</Panel>
 
-	<Panel title="Seasonal insights" subtitle="Patterns across selected period" class="xl:col-span-4">
-		<SeasonalInsights {summary} {monthNames} watch={watchWindow} />
+	<Panel
+		title={m.seasonal_title()}
+		subtitle={m.seasonal_subtitle()}
+		class="xl:col-span-4"
+	>
+		<SeasonalInsights {summary} monthNames={months} watch={watchWindow()} />
 	</Panel>
 
 	<Panel
-		title="Monthly activity"
-		subtitle="Detections by month for the selected sensors"
+		title={m.calendar_monthly_title()}
+		subtitle={m.calendar_monthly_subtitle()}
 		class="xl:col-span-12"
 	>
 		<div class="flex flex-col gap-6 lg:flex-row lg:items-center">
-			<MonthlyActivityChart months={monthNames} series={monthlySeries} class="h-64 flex-1" />
+			<MonthlyActivityChart months={months} series={monthlySeries} class="h-64 flex-1" />
 			<div class="border-base-content/10 lg:w-56 lg:border-s lg:ps-6">
 				<StatBlock
-					label="Top detection day"
-					value={dayFormat.format(new Date(summary.peakDay.date))}
-					note="{countFormat.format(summary.peakDay.count)} hotspots"
+					label={m.calendar_top_day()}
+					value={formatDate(summary.peakDay.date, 'day')}
+					note={m.kpi_hotspots({ count: formatNumber(summary.peakDay.count) })}
 				/>
 			</div>
 		</div>

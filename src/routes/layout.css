@@ -87,6 +87,18 @@
 	--noise: 0;
 }
 
+/*
+ * Tema oscuro: los alias "strong" (texto de color legible) usan tonos claros, porque los
+ * oscuros del tema claro no contrastan sobre las superficies oscuras.
+ */
+[data-theme='firewatch'] {
+	--color-success-strong: var(--color-success-100);
+	--color-warning-strong: var(--color-warning-100);
+	--color-error-strong: var(--color-error-100);
+	--color-info-strong: var(--color-info-100);
+	--color-secondary-strong: var(--color-secondary-200);
+}
+
 /* Ítem activo del menú: fondo de superficie (base-100) sobre el gris del menú. */
 @utility menu {
 	--menu-active-bg: var(--color-base-100);
@@ -106,6 +118,12 @@
 	&:hover {
 		--btn-border: var(--color-field-border-hover);
 	}
+}
+
+/* Botón de acción principal (ver --color-action en colors.css). */
+@utility btn-action {
+	--btn-color: var(--color-action);
+	--btn-fg: var(--color-action-content);
 }
 
 /* Selects e inputs de daisyUI con el mismo borde que los campos con forma de botón. */

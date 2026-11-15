@@ -8,11 +8,16 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { onMount } from 'svelte';
 	import { dismissable } from '#lib/dropdown.ts';
+	import { formatDateRange } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getLocale } from '#lib/paraglide/runtime.js';
 
 	type Props = {
 		/** Fechas en formato ISO (`AAAA-MM-DD`). */
 		from: string;
 		to: string;
+		/** Nombre accesible del campo. */
+		label?: string;
 		/** Atajos que aparecen a la izquierda del calendario. */
 		presets?: DatePreset[];
 		/** Límites del calendario (ISO). */
@@ -20,7 +25,14 @@
 		max?: string;
 	};
 
-	let { from = $bindable(), to = $bindable(), presets = [], min, max }: Props = $props();
+	let {
+		from = $bindable(),
+		to = $bindable(),
+		label = m.filter_time_range(),
+		presets = [],
+		min,
+		max
+	}: Props = $props();
 
 	let open = $state(false);
 	/** Cally es un web component: se carga solo en el navegador. */
@@ -30,25 +42,8 @@
 		import('cally').then(() => (ready = true));
 	});
 
-	const dayMonth = new Intl.DateTimeFormat('en-US', {
-		month: 'short',
-		day: '2-digit',
-		timeZone: 'UTC'
-	});
-	const full = new Intl.DateTimeFormat('en-US', {
-		month: 'short',
-		day: '2-digit',
-		year: 'numeric',
-		timeZone: 'UTC'
-	});
-
-	let summary = $derived.by(() => {
-		if (!from || !to) return 'Select dates';
-		const start = new Date(from);
-		const end = new Date(to);
-		const first = start.getUTCFullYear() === end.getUTCFullYear() ? dayMonth : full;
-		return `${first.format(start)} — ${full.format(end)}`;
-	});
+	// Mismo formato de rango que los subtítulos de los paneles (format.ts).
+	let summary = $derived(from && to ? formatDateRange(from, to) : m.date_select());
 
 	let activePreset = $derived(presets.find((preset) => preset.from === from && preset.to === to));
 
@@ -69,10 +64,10 @@
 </script>
 
 <details class="dropdown w-full" bind:open {@attach dismissable}>
-	<summary class="btn w-full btn-field justify-start text-label-lg">
+	<summary class="btn w-full btn-field justify-start text-label-lg" title={summary}>
 		<CalendarRange class="size-4 shrink-0 text-base-content/70" aria-hidden="true" />
-		<span class="sr-only">Time range:</span>
-		<span class="flex-1 truncate text-start">{summary}</span>
+		<span class="sr-only">{label}:</span>
+		<span class="w-0 min-w-0 flex-1 truncate text-start">{summary}</span>
 		<ChevronDown
 			class={['size-4 shrink-0 text-base-content/70 transition-transform', open && 'rotate-180']}
 			aria-hidden="true"
@@ -85,7 +80,7 @@
 		{#if presets.length}
 			<ul
 				class="menu w-full shrink-0 gap-1 border-base-content/10 p-2 text-label sm:w-44 sm:border-e"
-				aria-label="Quick ranges"
+				aria-label={m.date_quick_ranges()}
 			>
 				{#each presets as preset (preset.label)}
 					<li>
@@ -109,14 +104,14 @@
 				months={2}
 				{min}
 				{max}
-				locale="en-US"
+				locale={getLocale()}
 				{onchange}
 			>
 				<!-- Flechas del calendario (mismo trazo que Lucide). `slot` va por spread: los tipos de
 				     Svelte no lo admiten en SVG, pero Cally lo necesita para ubicarlas. -->
 				<svg
 					{...{ slot: 'previous' }}
-					aria-label="Previous"
+					aria-label={m.date_previous()}
 					class="size-4"
 					viewBox="0 0 24 24"
 					fill="none"
@@ -127,7 +122,7 @@
 				</svg>
 				<svg
 					{...{ slot: 'next' }}
-					aria-label="Next"
+					aria-label={m.date_next()}
 					class="size-4"
 					viewBox="0 0 24 24"
 					fill="none"

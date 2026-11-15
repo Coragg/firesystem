@@ -15,6 +15,7 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import { dismissable } from '#lib/dropdown.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { Sensor } from '#lib/sensors.ts';
 	import DateRangeField, { type DatePreset } from './DateRangeField.svelte';
 	import DropdownSelect from './DropdownSelect.svelte';
@@ -24,15 +25,18 @@
 	type Props = {
 		/** Filtros que muestra esta pantalla. El orden en pantalla es siempre el mismo. */
 		fields?: FilterName[];
-		/** Periodo elegido de una lista (por ejemplo "2020 — 2024" o "Jan — Dec 2024"). */
+		/** Periodo elegido de una lista (identificadores; el texto sale de `periodFormat`). */
 		period?: string;
 		periodOptions?: readonly string[];
+		periodFormat?: (id: string) => string;
 		/** Etiqueta del filtro de periodo. */
 		periodLabel?: string;
 		year?: number;
 		yearOptions?: readonly number[];
 		area?: string;
 		areaOptions?: readonly string[];
+		/** Texto de cada área (las opciones son identificadores). */
+		areaFormat?: (id: string) => string;
 		/** Etiqueta del filtro de área. */
 		areaLabel?: string;
 		/** Fechas en formato ISO (`AAAA-MM-DD`). */
@@ -45,9 +49,10 @@
 		sensors?: Sensor[];
 		confidence?: string;
 		confidenceOptions?: readonly string[];
+		confidenceFormat?: (id: string) => string;
 		/** Etiqueta del rango de fechas. */
 		dateLabel?: string;
-		/** Etiqueta visible del filtro de confianza. Sin ella, el campo va sin título. */
+		/** Etiqueta visible del filtro de confianza. */
 		confidenceLabel?: string;
 		/** Texto del botón de exportar. */
 		exportLabel?: string;
@@ -55,6 +60,8 @@
 		exportOptions?: ExportOption[];
 		/** Si se pasa, aparece el botón "Reset". */
 		onreset?: () => void;
+		/** Reset inactivo (por ejemplo, cuando los filtros ya están en sus valores iniciales). */
+		resetDisabled?: boolean;
 		/** Botón que reemplaza al de exportar en pantallas que no exportan. */
 		action?: Snippet;
 	};
@@ -63,12 +70,14 @@
 		fields = ['area', 'dates', 'sensors', 'confidence'],
 		period = $bindable(''),
 		periodOptions = [],
-		periodLabel = 'Reporting period',
+		periodLabel = m.filter_reporting_period(),
+		periodFormat = String,
 		year = $bindable(0),
 		yearOptions = [],
 		area = $bindable(''),
 		areaOptions = [],
-		areaLabel = 'Area of interest',
+		areaLabel = m.filter_area(),
+		areaFormat = String,
 		from = $bindable(''),
 		to = $bindable(''),
 		datePresets = [],
@@ -77,11 +86,13 @@
 		sensors = $bindable([]),
 		confidence = $bindable(''),
 		confidenceOptions = [],
-		dateLabel = 'Time range',
-		confidenceLabel,
-		exportLabel = 'Export analysis',
+		confidenceFormat = String,
+		dateLabel = m.filter_time_range(),
+		confidenceLabel = m.filter_confidence(),
+		exportLabel = m.export_analysis(),
 		exportOptions = [],
 		onreset,
+		resetDisabled = false,
 		action
 	}: Props = $props();
 
@@ -95,7 +106,7 @@
 
 <form
 	class="flex flex-wrap items-end gap-4"
-	aria-label="Filters"
+	aria-label={m.filters()}
 	onsubmit={(event) => event.preventDefault()}
 >
 	{#if fields.includes('period')}
@@ -103,6 +114,7 @@
 			<DropdownSelect
 				bind:value={period}
 				options={periodOptions}
+				format={periodFormat}
 				label={periodLabel}
 				icon={CalendarRange}
 				class="w-full"
@@ -111,11 +123,11 @@
 	{/if}
 
 	{#if fields.includes('year')}
-		<FilterField label="Year" class="min-w-36 flex-1">
+		<FilterField label={m.filter_year()} class="min-w-36 flex-1">
 			<DropdownSelect
 				bind:value={year}
 				options={yearOptions}
-				label="Year"
+				label={m.filter_year()}
 				icon={CalendarDays}
 				class="w-full"
 			/>
@@ -123,10 +135,11 @@
 	{/if}
 
 	{#if fields.includes('area')}
-		<FilterField label={areaLabel} class="min-w-60 flex-1">
+		<FilterField label={areaLabel} class="min-w-56 flex-1">
 			<DropdownSelect
 				bind:value={area}
 				options={areaOptions}
+				format={areaFormat}
 				label={areaLabel}
 				icon={Earth}
 				class="w-full"
@@ -136,22 +149,30 @@
 
 	{#if fields.includes('dates')}
 		<FilterField label={dateLabel} class="min-w-56 flex-1">
-			<DateRangeField bind:from bind:to presets={datePresets} min={minDate} max={maxDate} />
+			<DateRangeField
+				bind:from
+				bind:to
+				label={dateLabel}
+				presets={datePresets}
+				min={minDate}
+				max={maxDate}
+			/>
 		</FilterField>
 	{/if}
 
 	{#if fields.includes('sensors')}
-		<FilterField label="Sensors" class="min-w-48 flex-1">
+		<FilterField label={m.filter_sensors()} class="min-w-48 flex-1">
 			<SensorToggle bind:selected={sensors} />
 		</FilterField>
 	{/if}
 
 	{#if fields.includes('confidence')}
-		<FilterField label={confidenceLabel} class="min-w-56 flex-1">
+		<FilterField label={confidenceLabel} class="min-w-48 flex-1">
 			<DropdownSelect
 				bind:value={confidence}
 				options={confidenceOptions}
-				label="Confidence"
+				format={confidenceFormat}
+				label={confidenceLabel}
 				icon={ShieldCheck}
 				class="w-full"
 			/>
@@ -160,19 +181,24 @@
 
 	{#if onreset}
 		<FilterField>
-			<button type="button" class="btn text-label-lg btn-ghost" onclick={onreset}>
+			<button
+				type="button"
+				class="btn text-label-lg btn-ghost"
+				disabled={resetDisabled}
+				onclick={onreset}
+			>
 				<RotateCcw class="size-4" aria-hidden="true" />
-				Reset
+				{m.filter_reset()}
 			</button>
 		</FilterField>
 	{/if}
 
-	<FilterField class="min-w-48 flex-1">
+	<FilterField class="min-w-44 flex-1">
 		{#if action}
 			{@render action()}
 		{:else if exportOptions.length}
 			<details class="dropdown dropdown-end w-full" bind:open={exportOpen} {@attach dismissable}>
-				<summary class="btn w-full text-label-lg whitespace-nowrap btn-info">
+				<summary class="btn w-full text-label-lg whitespace-nowrap btn-action">
 					<Download class="size-4" aria-hidden="true" />
 					{exportLabel}
 					<ChevronDown
@@ -198,7 +224,7 @@
 				</ul>
 			</details>
 		{:else}
-			<button type="button" class="btn w-full text-label-lg btn-info">
+			<button type="button" class="btn w-full text-label-lg btn-action">
 				<Download class="size-4" aria-hidden="true" />
 				{exportLabel}
 			</button>

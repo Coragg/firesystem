@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { sensorList, type Sensor } from '#lib/sensors.ts';
 
 	type Props = {
@@ -17,7 +18,7 @@
 <div class="grid grid-cols-2 gap-2">
 	{#each sensorList as sensor (sensor.id)}
 		{@const locked = selected.length === 1 && selected.includes(sensor.id)}
-		<div class={['grid', locked && 'tooltip tooltip-bottom']} data-tip="At least one sensor stays on">
+		<div class={['grid', locked && 'tooltip tooltip-bottom']} data-tip={m.sensors_keep_one()}>
 			<label
 				class={[
 					'btn btn-field gap-2 text-label-lg text-base-content/60',

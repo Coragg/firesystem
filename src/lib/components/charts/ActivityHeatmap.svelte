@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { heatScale } from '#lib/charts/heat.ts';
+	import { formatDate, formatNumber, weekdayNames } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { DailyActivity } from '#lib/types.ts';
 
 	type Props = {
@@ -13,24 +15,8 @@
 
 	let { days, label, months = 'alternate' }: Props = $props();
 
-	const weekdays = [
-		{ id: 'mon', label: 'M' },
-		{ id: 'tue', label: 'T' },
-		{ id: 'wed', label: 'W' },
-		{ id: 'thu', label: 'T' },
-		{ id: 'fri', label: 'F' },
-		{ id: 'sat', label: 'S' },
-		{ id: 'sun', label: 'S' }
-	];
-
-	const dayFormat = new Intl.DateTimeFormat('en-US', {
-		month: 'short',
-		day: 'numeric',
-		year: 'numeric',
-		timeZone: 'UTC'
-	});
-	const monthFormat = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' });
-	const countFormat = new Intl.NumberFormat('en-US');
+	/** Iniciales de lunes a domingo en el idioma activo ("L M X J V S D" en español). */
+	const weekdays = weekdayNames('narrow').map((label, index) => ({ id: index, label }));
 
 	let level = $derived(heatScale(days.map((day) => day.count)));
 
@@ -45,14 +31,17 @@
 			const date = new Date(day.date);
 			const shown = months === 'all' || date.getUTCMonth() % 2 === 0;
 			if (date.getUTCDate() === 1 && shown) {
-				labels[Math.floor((offset + index) / 7)].text = monthFormat.format(date);
+				labels[Math.floor((offset + index) / 7)].text = formatDate(date, 'monthShort');
 			}
 		});
 		return labels;
 	});
 
 	function describe(day: DailyActivity): string {
-		return `${dayFormat.format(new Date(day.date))} · ${countFormat.format(day.count)} detections`;
+		return m.heatmap_day({
+			date: formatDate(day.date, 'dayYear'),
+			count: formatNumber(day.count)
+		});
 	}
 </script>
 

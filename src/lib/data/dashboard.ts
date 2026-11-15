@@ -3,6 +3,14 @@
  * área, sensor y día para que los filtros tengan efecto visible. Cuando el backend exista,
  * `buildOverview` se reemplaza por llamadas a la API manteniendo los mismos tipos.
  */
+import {
+	formatDate,
+	formatDateRange,
+	formatDecimal,
+	formatNumber,
+	formatPercent
+} from '#lib/format.ts';
+import { m } from '#lib/paraglide/messages.js';
 import type { Sensor } from '#lib/sensors.ts';
 import type {
 	Confidence,
@@ -12,9 +20,7 @@ import type {
 	Kpi,
 	SensorSeries
 } from '#lib/types.ts';
-import { regions, seeded, type Region } from './common.ts';
-
-export const watchWindow = { label: 'Suggested watch window', value: 'Next elevated risk: Nov 18–24' };
+import { regions, seeded, type AreaId, type Region } from './common.ts';
 
 /** Primer día con datos. El último es hoy (UTC). */
 export const firstDataDay = '2020-01-01';
@@ -77,7 +83,7 @@ type YearData = {
 
 const yearCache = new Map<string, YearData>();
 
-function yearData(area: string, year: number): YearData {
+function yearData(area: AreaId, year: number): YearData {
 	const key = `${area}:${year}`;
 	const cached = yearCache.get(key);
 	if (cached) return cached;
@@ -147,7 +153,7 @@ function buildSample(region: Region, year: number, shape: number[], random: () =
 /* ---------------------------------------------------------------- Consultas */
 
 export type OverviewQuery = {
-	area: string;
+	area: AreaId;
 	/** Fechas ISO, ambas incluidas. */
 	from: string;
 	to: string;
@@ -192,31 +198,33 @@ function correlation(a: number[], b: number[]): number {
 
 /* ---------------------------------------------------------------- Formato */
 
-const countFormat = new Intl.NumberFormat('en-US');
-const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-const dayOnly = new Intl.DateTimeFormat('en-US', { day: 'numeric', timeZone: 'UTC' });
-const monthLong = new Intl.DateTimeFormat('en-US', { month: 'long', timeZone: 'UTC' });
-
 function spansYears(query: OverviewQuery): boolean {
 	return query.from.slice(0, 4) !== query.to.slice(0, 4);
 }
 
-/** "Feb 12–18" o "Jan 29–Feb 4" (con año si el rango cruza años). */
-function weekLabel(from: string, to: string, withYear: boolean): string {
-	const [start, end] = [new Date(from), new Date(to)];
-	const tail = start.getUTCMonth() === end.getUTCMonth() ? dayOnly.format(end) : shortDate.format(end);
-	return `${shortDate.format(start)}–${tail}${withYear ? `, ${start.getUTCFullYear()}` : ''}`;
-}
-
 /* ---------------------------------------------------------------- Overview */
+
+/** Rangos de hasta este largo (días) admiten la vista semanal del gráfico. */
+export const weeklyMaxDays = 183;
+
+export type ActivitySeries = {
+	/** Nombre completo de cada barra (tooltip). */
+	names: string[];
+	/** Etiqueta corta de cada barra (eje). */
+	labels?: string[];
+	series: SensorSeries[];
+};
 
 export type Overview = {
 	region: Region;
 	kpis: Kpi[];
 	/** Detecciones diarias de los sensores seleccionados. */
 	daily: DailyActivity[];
-	monthly: { months: string[]; series: SensorSeries[] };
+	monthly: ActivitySeries;
+	/** Solo en rangos de hasta `weeklyMaxDays` días. */
+	weekly?: ActivitySeries;
 	critical: CriticalPeriod[];
+	watch: { label: string; value: string };
 	hotspots: Detection[];
 };
 
@@ -231,14 +239,24 @@ export function buildOverview(query: OverviewQuery): Overview {
 		kpis: buildKpis(query, daily, previous),
 		daily,
 		monthly: buildMonthly(query),
+		weekly: length <= weeklyMaxDays ? buildWeekly(query) : undefined,
 		critical: buildCritical(query, daily),
+		watch: buildWatch(query),
 		hotspots: buildHotspots(query)
 	};
 }
 
+/**
+ * Regla de color de las tendencias: más fuego es malo (error), menos es bueno (success),
+ * en todos los indicadores.
+ */
+function trend(change: number): Pick<Kpi, 'tone' | 'trend'> {
+	return change >= 0 ? { tone: 'error', trend: 'up' } : { tone: 'success', trend: 'down' };
+}
+
 function buildKpis(query: OverviewQuery, daily: DailyActivity[], previous: DailyActivity[]): Kpi[] {
 	const total = sum(daily);
-	const change = ((total - sum(previous)) / Math.max(1, sum(previous))) * 100;
+	const change = (total - sum(previous)) / Math.max(1, sum(previous));
 	const year = query.from.slice(0, 4);
 	const yearDays = combined(query, `${year}-01-01`, `${year}-12-31`);
 	const threshold = (activeDayFactor * sum(yearDays)) / yearDays.length;
@@ -251,53 +269,60 @@ function buildKpis(query: OverviewQuery, daily: DailyActivity[], previous: Daily
 		? correlation(
 				dailyCounts(query, 'MODIS').map((day) => day.count),
 				dailyCounts(query, 'VIIRS').map((day) => day.count)
-			) * 100
+			)
 		: 0;
 
 	return [
 		{
-			label: 'Detections in period',
-			value: countFormat.format(total),
-			highlight: `${Math.abs(change).toFixed(1)}%`,
-			tone: change >= 0 ? 'primary' : 'success',
-			trend: change >= 0 ? 'up' : 'down',
-			note: 'vs. previous period'
+			label: m.kpi_detections_period(),
+			value: formatNumber(total),
+			highlight: formatPercent(Math.abs(change), 1),
+			...trend(change),
+			note: m.kpi_vs_previous_period()
 		},
 		{
-			label: 'Active burn days',
-			value: countFormat.format(active),
-			highlight: `${Math.abs(activeChange)} days`,
-			tone: activeChange >= 0 ? 'error' : 'success',
-			trend: activeChange >= 0 ? 'up' : 'down',
-			note: 'vs. previous period'
+			label: m.kpi_active_days(),
+			value: formatNumber(active),
+			highlight:
+				Math.abs(activeChange) === 1
+					? m.kpi_day_one()
+					: m.kpi_days({ count: formatNumber(Math.abs(activeChange)) }),
+			...trend(activeChange),
+			note: m.kpi_vs_previous_period()
 		},
 		{
-			label: 'Peak activity',
-			value: shortDate.format(new Date(peak.date)),
-			highlight: `${countFormat.format(peak.count)} hotspots`,
+			label: m.kpi_peak_activity(),
+			// Con un rango de varios años, la fecha lleva el año para no ser ambigua.
+			value: formatDate(peak.date, spansYears(query) ? 'dayYear' : 'day'),
+			highlight: m.kpi_hotspots({ count: formatNumber(peak.count) }),
 			tone: 'warning',
-			note: 'on the busiest day'
+			note: m.kpi_busiest_day()
 		},
 		both
 			? {
-					label: 'Sensor agreement',
-					value: `${agreement.toFixed(1)}%`,
-					highlight: agreement >= 85 ? 'High confidence' : agreement >= 70 ? 'Moderate' : 'Low',
-					tone: agreement >= 85 ? 'secondary' : 'warning',
-					note: 'between MODIS and VIIRS'
+					label: m.kpi_sensor_agreement(),
+					value: formatPercent(agreement, 1),
+					highlight:
+						agreement >= 0.85
+							? m.agreement_high()
+							: agreement >= 0.7
+								? m.agreement_moderate()
+								: m.agreement_low(),
+					tone: agreement >= 0.85 ? 'secondary' : 'warning',
+					note: m.kpi_between_sensors()
 				}
 			: {
-					label: 'Sensor agreement',
+					label: m.kpi_sensor_agreement(),
 					value: '—',
-					highlight: 'Needs both sensors',
+					highlight: m.agreement_needs_both(),
 					tone: 'neutral',
-					note: 'turn on MODIS and VIIRS'
+					note: m.agreement_turn_on_both()
 				}
 	];
 }
 
 /** Totales por mes y sensor dentro del rango. */
-function buildMonthly(query: OverviewQuery): Overview['monthly'] {
+function buildMonthly(query: OverviewQuery): ActivitySeries {
 	const keys: string[] = [];
 	const series = query.sensors.map((sensor) => {
 		const totals = new Map<string, number>();
@@ -308,12 +333,39 @@ function buildMonthly(query: OverviewQuery): Overview['monthly'] {
 		if (!keys.length) keys.push(...totals.keys());
 		return { sensor, values: keys.map((key) => totals.get(key) ?? 0) };
 	});
-	const withYear = spansYears(query);
-	const months = keys.map((key) => {
-		const name = monthLong.format(new Date(`${key}-01`));
-		return withYear ? `${name} ${key.slice(0, 4)}` : name;
+	const style = spansYears(query) ? 'monthYear' : 'month';
+	return { names: keys.map((key) => formatDate(`${key}-01`, style)), series };
+}
+
+/** Totales por semana (bloques de 7 días desde el inicio del rango) y sensor. */
+function buildWeekly(query: OverviewQuery): ActivitySeries {
+	const starts: string[] = [];
+	for (let date = query.from; date <= query.to; date = addDays(date, 7)) starts.push(date);
+	const series = query.sensors.map((sensor) => {
+		const days = dailyCounts(query, sensor);
+		return {
+			sensor,
+			values: starts.map((_, index) => sum(days.slice(index * 7, index * 7 + 7)))
+		};
 	});
-	return { months, series };
+	const withYear = spansYears(query);
+	return {
+		names: starts.map((start) => {
+			const end = addDays(start, 6) < query.to ? addDays(start, 6) : query.to;
+			return formatDateRange(start, end, withYear);
+		}),
+		labels: starts.map((start) => formatDate(start, 'day')),
+		series
+	};
+}
+
+/** Mediana de las semanas del año: la "semana típica" contra la que se compara. */
+function weeklyBaseline(query: OverviewQuery, year: string): number {
+	const yearDays = combined(query, `${year}-01-01`, `${year}-12-31`);
+	const weeks: number[] = [];
+	for (let i = 0; i + 7 <= yearDays.length; i += 7) weeks.push(sum(yearDays.slice(i, i + 7)));
+	weeks.sort((a, b) => a - b);
+	return Math.max(1, weeks[Math.floor(weeks.length / 2)]);
 }
 
 /**
@@ -321,13 +373,7 @@ function buildMonthly(query: OverviewQuery): Overview['monthly'] {
  * Se muestran hasta tres, de la más a la menos intensa.
  */
 function buildCritical(query: OverviewQuery, daily: DailyActivity[]): CriticalPeriod[] {
-	const year = query.from.slice(0, 4);
-	const yearDays = combined(query, `${year}-01-01`, `${year}-12-31`);
-	const yearWeeks: number[] = [];
-	for (let i = 0; i + 7 <= yearDays.length; i += 7) yearWeeks.push(sum(yearDays.slice(i, i + 7)));
-	yearWeeks.sort((a, b) => a - b);
-	const baseline = Math.max(1, yearWeeks[Math.floor(yearWeeks.length / 2)]);
-
+	const baseline = weeklyBaseline(query, query.from.slice(0, 4));
 	const withYear = spansYears(query);
 	const weeks: (CriticalPeriod & { ratio: number })[] = [];
 	for (let i = 0; i + 7 <= daily.length; i += 7) {
@@ -337,9 +383,11 @@ function buildCritical(query: OverviewQuery, daily: DailyActivity[]): CriticalPe
 		if (ratio < elevatedRatio) continue;
 		weeks.push({
 			id: week[0].date,
-			range: weekLabel(week[0].date, week[6].date, withYear),
+			from: week[0].date,
+			to: week[6].date,
+			range: formatDateRange(week[0].date, week[6].date, withYear),
 			severity: ratio >= criticalRatio ? 'critical' : 'elevated',
-			detail: `${ratio.toFixed(1)}× seasonal baseline · ${countFormat.format(count)} detections`,
+			detail: m.critical_detail({ ratio: formatDecimal(ratio), count: formatNumber(count) }),
 			ratio
 		});
 	}
@@ -347,6 +395,27 @@ function buildCritical(query: OverviewQuery, daily: DailyActivity[]): CriticalPe
 		.sort((a, b) => b.ratio - a.ratio)
 		.slice(0, 3)
 		.map(({ ratio: _, ...period }) => period);
+}
+
+/**
+ * Ventana de vigilancia sugerida: de las cuatro semanas que siguen al rango, la que tuvo más
+ * actividad el año anterior en las mismas fechas (análogo estacional).
+ */
+function buildWatch(query: OverviewQuery): Overview['watch'] {
+	const start = addDays(query.to, 1);
+	const lastYear = (iso: string) => `${Number(iso.slice(0, 4)) - 1}${iso.slice(4)}`;
+	let best = { from: start, count: -1 };
+	for (let week = 0; week < 4; week++) {
+		const from = addDays(start, week * 7);
+		const count = sum(combined(query, lastYear(from), lastYear(addDays(from, 6))));
+		if (count > best.count) best = { from, count };
+	}
+	const ratio = best.count / weeklyBaseline(query, lastYear(best.from).slice(0, 4));
+	const range = formatDateRange(best.from, addDays(best.from, 6), spansYears(query));
+	return {
+		label: m.watch_label(),
+		value: ratio >= elevatedRatio ? m.watch_elevated({ range }) : m.watch_normal({ range })
+	};
 }
 
 /** Muestra de detecciones del rango para el mapa, filtrada por sensor y confianza. */
