@@ -20,6 +20,7 @@ FireSystem is the SvelteKit frontend for the FireSystem application. It is built
 │   ├── app.html             # HTML shell for the SvelteKit app
 │   ├── app.d.ts             # App-wide TypeScript declarations
 │   ├── hooks.server.ts      # Per-request locale (Paraglide) and theme (cookie) on <html>
+│   ├── env.ts               # Environment variables (BACKEND_URL), read via $app/env/private
 │   ├── lib/                 # Shared components, utilities, and assets
 │   │   ├── assets/          # Static assets imported by application code
 │   │   ├── components/      # UI components: layout/, ui/, charts/, map/, and one folder per screen
@@ -34,6 +35,8 @@ FireSystem is the SvelteKit frontend for the FireSystem application. It is built
 │   │   ├── toast.svelte.ts  # App-wide toast notifications (shown by ui/Toaster)
 │   │   ├── dropdown.ts      # Closes <details> dropdowns on outside click / Escape
 │   │   ├── export.ts        # Client-side CSV and GeoJSON downloads
+│   │   ├── hotspot-forecast.ts # Types and client for the backend's XGBoost hotspot forecast
+│   │   ├── server/          # Server-only code (backend URL from BACKEND_URL)
 │   │   ├── format.ts        # Locale-aware numbers, dates and ranges (only place using Intl)
 │   │   ├── theme-preference.ts  # Light/dark theme names and the cookie that stores the choice
 │   │   ├── theme-version.svelte.ts  # Bumps on theme change so ECharts and Leaflet redraw
@@ -41,6 +44,7 @@ FireSystem is the SvelteKit frontend for the FireSystem application. It is built
 │   │   └── types.ts         # Shared domain types
 │   └── routes/              # SvelteKit file-based routes and layouts
 │       ├── layout.css       # Tailwind entry point and daisyUI themes
+│       ├── api/             # Server routes that proxy the backend API (avoids CORS)
 │       └── (app)/           # Signed-in app: shared sidebar layout and its pages
 ├── messages/                # i18n messages: es.json (source), en, pt, fr, id, ru
 ├── project.inlang/          # Paraglide/inlang project settings (base locale: es)

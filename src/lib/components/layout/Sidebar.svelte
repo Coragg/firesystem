@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
 	import { page } from '$app/state';
+	import BrainCircuit from '@lucide/svelte/icons/brain-circuit';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import ChartNoAxesCombined from '@lucide/svelte/icons/chart-no-axes-combined';
 	import Database from '@lucide/svelte/icons/database';
@@ -26,7 +27,8 @@
 				{ label: m.nav_overview(), href: '/', icon: LayoutDashboard },
 				{ label: m.nav_fire_map(), href: '/fire-map', icon: MapPinned },
 				{ label: m.nav_activity_calendar(), href: '/activity-calendar', icon: CalendarDays },
-				{ label: m.nav_trends(), href: '/trends', icon: ChartNoAxesCombined }
+				{ label: m.nav_trends(), href: '/trends', icon: ChartNoAxesCombined },
+				{ label: m.nav_predictions(), href: '/predictions', icon: BrainCircuit }
 			]
 		},
 		{
