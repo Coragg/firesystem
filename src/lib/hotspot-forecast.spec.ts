@@ -6,6 +6,7 @@ import {
 	forecastParams,
 	insideRegion
 } from './hotspot-forecast.ts';
+import { m } from '#lib/paraglide/messages.js';
 
 describe('forecastParams', () => {
 	it('sends the first day of the month', () => {
@@ -27,7 +28,7 @@ describe('errorDetail', () => {
 		expect(errorDetail({ detail: [{ loc: ['query', 'lat'], msg: 'too small' }] }, 422)).toBe(
 			'lat: too small'
 		);
-		expect(errorDetail(null, 503)).toMatch(/not available/);
+		expect(errorDetail(null, 503)).toBe(m.predict_error_unavailable());
 	});
 });
 

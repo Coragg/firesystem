@@ -3,6 +3,7 @@
  * El navegador llama a `/api/hotspot-forecast` de esta app, que reenvía la consulta al backend
  * (ver `src/routes/api/hotspot-forecast/+server.ts`), así no hace falta CORS.
  */
+import { m } from '#lib/paraglide/messages.js';
 
 /** Modelo que respondió: región de entrenamiento, meses y variables de entrada. */
 export type HotspotModelInfo = {
@@ -82,9 +83,9 @@ export function errorDetail(body: unknown, status: number): string {
 			.filter(Boolean)
 			.join('; ');
 	}
-	if (status === 503) return 'The prediction model is not available on the server.';
-	if (status === 502) return 'The backend could not reach one of its data sources.';
-	return `The prediction request failed (HTTP ${status}).`;
+	if (status === 503) return m.predict_error_unavailable();
+	if (status === 502) return m.predict_error_source();
+	return m.predict_error_failed({ status });
 }
 
 /** Fecha que espera el backend: cualquier día del mes, se usa el primero. */
@@ -104,6 +105,6 @@ export async function fetchHotspotForecast(
 	const body: unknown = await response.json().catch(() => null);
 	if (!response.ok) throw new ForecastError(errorDetail(body, response.status), response.status);
 	const data = (body as { data?: HotspotForecast } | null)?.data;
-	if (!data) throw new ForecastError('The backend returned an empty forecast.', response.status);
+	if (!data) throw new ForecastError(m.predict_error_empty(), response.status);
 	return data;
 }

@@ -15,6 +15,8 @@
 		insideRegion,
 		type HotspotForecast
 	} from '#lib/hotspot-forecast.ts';
+	import { formatNumber } from '#lib/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { notify } from '#lib/toast.svelte.ts';
 
 	const [[south, west], [north, east]] = forecastRegion.bounds;
@@ -46,7 +48,7 @@
 		} catch (failure) {
 			if (current.signal.aborted) return;
 			error =
-				failure instanceof ForecastError ? failure.message : 'Could not reach the prediction API.';
+				failure instanceof ForecastError ? failure.message : m.predict_error_unreachable();
 			notify(error, 'error');
 		} finally {
 			if (controller === current) loading = false;
@@ -55,15 +57,15 @@
 </script>
 
 <svelte:head>
-	<title>Predictions · Firewatch</title>
+	<title>{m.nav_predictions()} · Firewatch</title>
 </svelte:head>
 
 <PageHeader
-	title="Predictions"
-	subtitle="Estimate the monthly hotspot probability of a 500 m pixel with the XGBoost model"
+	title={m.nav_predictions()}
+	subtitle={m.predict_subtitle()}
 >
 	{#snippet actions()}
-		<StatusBadge tone="info" dot>Model region · {forecastRegion.name}</StatusBadge>
+		<StatusBadge tone="info" dot>{m.predict_model_region({ region: forecastRegion.name })}</StatusBadge>
 	{/snippet}
 </PageHeader>
 
@@ -75,7 +77,7 @@
 		bounds={forecastRegion.bounds}
 		center={forecastRegion.center}
 		zoom={forecastRegion.zoom}
-		label="Map to choose the point to predict in {forecastRegion.name}"
+		label={m.predict_map_label({ region: forecastRegion.name })}
 		class="h-128 xl:col-span-8 xl:h-auto xl:min-h-160"
 	>
 		{#snippet overlay()}
@@ -83,19 +85,19 @@
 				class="card absolute start-14 top-3 flex-row items-center gap-2 bg-base-100 px-3 py-2 text-caption text-base-content/70 shadow-sm"
 			>
 				<MousePointerClick class="size-4 shrink-0" aria-hidden="true" />
-				Click the map to choose a point inside the dashed area
+				{m.predict_map_hint()}
 			</div>
 		{/snippet}
 	</LocationPicker>
 
 	<div class="flex flex-col gap-4 xl:col-span-4 2xl:gap-6">
-		<Panel title="Run prediction" subtitle="Choose a month and a point">
+		<Panel title={m.predict_run()} subtitle={m.predict_run_subtitle()}>
 			<form class="flex flex-col gap-3" onsubmit={run}>
-				<FilterField label="Month">
+				<FilterField label={m.predict_month()}>
 					<input class="input w-full text-label-lg" type="month" bind:value={month} required />
 				</FilterField>
 				<div class="grid grid-cols-2 gap-3">
-					<FilterField label="Latitude">
+					<FilterField label={m.predict_latitude()}>
 						<input
 							class="input w-full text-label-lg tabular-nums"
 							type="number"
@@ -106,7 +108,7 @@
 							required
 						/>
 					</FilterField>
-					<FilterField label="Longitude">
+					<FilterField label={m.predict_longitude()}>
 						<input
 							class="input w-full text-label-lg tabular-nums"
 							type="number"
@@ -122,18 +124,22 @@
 				{#if outside}
 					<p class="flex items-start gap-2 text-caption text-warning-strong">
 						<TriangleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-						The point is outside the model region ({south}° to {north}° lat, {west}° to {east}° lon).
-						The API will reject it.
+						{m.predict_outside({
+							south: formatNumber(south),
+							north: formatNumber(north),
+							west: formatNumber(west),
+							east: formatNumber(east)
+						})}
 					</p>
 				{/if}
 
 				<button type="submit" class="btn btn-primary text-label-lg" disabled={!ready || loading}>
 					{#if loading}
 						<span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-						Running model…
+						{m.predict_running()}
 					{:else}
 						<Play class="size-4" aria-hidden="true" />
-						Run prediction
+						{m.predict_run()}
 					{/if}
 				</button>
 			</form>
@@ -149,9 +155,9 @@
 		{#if forecast}
 			<ForecastResult {forecast} />
 		{:else if !error}
-			<Panel title="Prediction result">
+			<Panel title={m.predict_result_title()}>
 				<p class="text-body text-base-content/70">
-					Run the model to see the hotspot probability, the pixel it used and its inputs.
+					{m.predict_result_empty()}
 				</p>
 			</Panel>
 		{/if}

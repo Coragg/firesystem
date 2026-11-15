@@ -5,6 +5,7 @@
 	import type { Attachment } from 'svelte/attachments';
 	import type { ClassValue } from 'svelte/elements';
 	import { basemap } from '#lib/map/basemap.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { cssVar, spacingUnit } from '#lib/theme.ts';
 
 	type Leaflet = typeof import('leaflet');
@@ -106,7 +107,7 @@
 				weight: unit / 2,
 				fill: false
 			})
-				.bindTooltip('Model pixel (500 m)')
+				.bindTooltip(m.predict_pixel_tooltip())
 				.addTo(group);
 		}
 		if (lat != null && lon != null) {
@@ -117,7 +118,7 @@
 				fillColor: cssVar(node, '--color-primary'),
 				fillOpacity: 1
 			})
-				.bindTooltip('Selected point')
+				.bindTooltip(m.predict_selected_point())
 				.addTo(group);
 		}
 
